@@ -17,16 +17,18 @@ export default class Plugin extends Patch{
 					letterSpacing: 4`)
 			}),
 			new EditFunction(SongSelect.prototype, "keyPress").load(str => {
+				str = plugins.strReplace(str, 'this.selectedDiff === 2', 'this.selectedDiff === 3')
 				return plugins.insertBefore(str,
-				`}else if(this.selectedDiff === 3){
+				`}else if(this.selectedDiff === 2){
 					this.toDownload()
 				`, '}else if(this.selectedDiff === 1){')
 			}),
 			new EditFunction(SongSelect.prototype, "mouseDown").load(str => {
+				str = plugins.strReplace(str, 'moveBy === 2', 'moveBy === 3')
 				return plugins.insertBefore(str,
-				`}else if(moveBy === 3){
+				`}else if(moveBy === 2){
 					this.toDownload()
-				`, '}else if(moveBy !== null){')
+				`, '}else if(moveBy === 1){')
 			}),
 			new EditValue(SongSelect.prototype, "toDownload").load(() => this.toDownload),
 			new EditFunction(CanvasDraw.prototype, "diffOptionsIcon").load(str => {
