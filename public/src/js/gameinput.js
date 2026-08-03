@@ -5,6 +5,7 @@ class GameInput{
 	init(controller){
 		this.controller = controller
 		this.game = this.controller.game
+		this.soundEffect = this.controller.soundEffect || 1
 		
 		this.keyboard = new Keyboard({
 			ka_l: ["ka_l"],
@@ -184,7 +185,7 @@ class GameInput{
 					}
 				}
 			}
-			this.controller.playSound("neiro_1_" + sound)
+			this.controller.playSound("neiro_"+ this.soundEffect + "_" + sound)
 		})
 	}
 	getKeys(){

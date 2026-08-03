@@ -1110,6 +1110,11 @@
 			ctx.translate(2, -2)
 			ctx.fillStyle = "#d9d6ce"
 			ctx.fill(this.optionsPath.main)
+		}else if(config.iconName === "sounds"){
+			var note = assets.image["yatai_diff_sounds_icon_user"]
+			if(note){
+				ctx.drawImage(note, config.x - 21, config.y - 24, 42, 45)
+			}
 		}
 		
 		ctx.restore()
