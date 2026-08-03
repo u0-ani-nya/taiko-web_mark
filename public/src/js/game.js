@@ -545,6 +545,13 @@ class Game{
 			}else if(this.controller.multiplayer !== 2 && this.mainAsset){
 				this.mainAsset.play((ms < 0 ? -ms : 0) / 1000, false, Math.max(0, ms / 1000))
 			}
+			// 同步启动背景视频
+			if(window.videoElement) {
+				var videoStartTime = Math.max(0, ms / 1000)
+				window.videoElement.currentTime = videoStartTime
+				window.videoElement.style.display = "block"
+				window.videoElement.play()
+			}
 			this.mainMusicPlaying = true
 		}
 	}

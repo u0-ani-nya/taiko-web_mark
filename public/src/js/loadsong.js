@@ -379,20 +379,22 @@ class LoadSong{
 	
 	static insertBackgroundVideo(songId) {
         const video = document.createElement("video");
-        video.src = `songs/${songId}/main.mp4`; 
-        video.autoplay = true;
-        video.muted = true;  // 可选：静音
-        video.playsInline = true;                   // 关键：防止某些浏览器接管播放
-        video.disablePictureInPicture = true;       // 关键：禁用画中画减少额外开销
+        video.src = `songs/${songId}/main.mp4`;
+        video.autoplay = false;                     // 不自动播放，等游戏音频同步启动
+        video.muted = true;                         // 静音（音频由游戏 mp3 负责）
+        video.preload = "auto";                     // 预加载视频数据
+        video.playsInline = true;                   // 防止某些浏览器接管播放
+        video.disablePictureInPicture = true;       // 禁用画中画减少额外开销
         video.style.objectFit = 'cover';
         video.style.position = 'fixed';
         video.style.top = "0";
         video.style.left = "0";
-        video.style.zIndex = "0";  // 背景视频
+        video.style.zIndex = "0";                   // 背景视频
         video.style.width = "100vw";
         video.style.height = "100vh";
-        video.style.transform = "translateZ(0)";    // 关键：强制开启 GPU 硬件加速
-        video.style.willChange = "transform";       // 关键：提示浏览器优化渲染
+        video.style.transform = "translateZ(0)";    // 强制开启 GPU 硬件加速
+        video.style.willChange = "transform";       // 提示浏览器优化渲染
+        video.style.display = "none";               // 隐藏直到游戏开始
         document.body.appendChild(video);
         window.videoElement = video;
     }
