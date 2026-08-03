@@ -1772,7 +1772,7 @@ class SongSelect{
 			"type": selectedSong.type,
 			"offset": selectedSong.offset,
 			"songSkin": selectedSong.songSkin,
-			"stars": selectedSong.courses[diff].stars,
+			"stars": (selectedSong.courses[diff] || {}).stars || 0,
 			"hash": selectedSong.hash,
 			"soundEffect": soundEffec,
 			"mods": mods,
