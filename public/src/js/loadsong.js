@@ -16,7 +16,7 @@ class LoadSong{
 		}else if(resolution === "lowest"){
 			this.imgScale = 0.25
 		}
-		
+
 		loader.changePage("loadsong", true)
 		var loadingText = document.getElementById("loading-text")
 		loadingText.appendChild(document.createTextNode(strings.loading))
@@ -59,6 +59,7 @@ class LoadSong{
 			}
 		}
 		this.songObj = songObj
+
 		song.songBg = this.randInt(1, 5)
 		song.songStage = this.randInt(1, 3)
 		song.donBg = this.randInt(1, 6)
@@ -104,8 +105,8 @@ class LoadSong{
 				}
 				let img = document.createElement("img")
 				let force = imgLoad[i].type === "song" && this.touchEnabled
-				if(!songObj.custom){
-					img.crossOrigin = "anonymous"
+				if(!songObj.custom && (this.imgScale !== 1 || force)){
+					img.crossOrigin = "Anonymous"
 				}
 				let promise = pageEvents.load(img)
 				this.addPromise(promise.then(() => {
@@ -121,7 +122,7 @@ class LoadSong{
 			}
 		}
 		this.loadSongBg(id)
-		
+
 		if(songObj.sound && songObj.sound.buffer){
 			songObj.sound.gain = snd.musicGain
 		}else if(songObj.music !== "muted"){
@@ -148,30 +149,15 @@ class LoadSong{
 		}
 		if(this.touchEnabled && !assets.image["touch_drum"]){
 			let img = document.createElement("img")
-			img.crossOrigin = "anonymous"
+			if(this.imgScale !== 1){
+				img.crossOrigin = "Anonymous"
+			}
 			var url = gameConfig.assets_baseurl + "img/touch_drum.png"
 			this.addPromise(pageEvents.load(img).then(() => {
 				return this.scaleImg(img, "touch_drum", "")
 			}), url)
 			img.src = url
 		}
-		var resultsImg = [
-			"results_flowers",
-			"results_mikoshi",
-			"results_tetsuohana",
-			"results_tetsuohana2"
-		]
-		resultsImg.forEach(id => {
-			if(!assets.image[id]){
-				var img = document.createElement("img")
-				img.crossOrigin = "anonymous"
-				var url = gameConfig.assets_baseurl + "img/" + id + ".png"
-				this.addPromise(pageEvents.load(img).then(() => {
-					return this.scaleImg(img, id, "")
-				}), url)
-				img.src = url
-			}
-		})
 		if(songObj.volume && songObj.volume !== 1){
 			this.promises.push(new Promise(resolve => setTimeout(resolve, 500)))
 		}
@@ -233,7 +219,9 @@ class LoadSong{
 				if(!(filenameAb in assets.image)){
 					let img = document.createElement("img")
 					let force = filenameAb.startsWith("bg_song_") && this.touchEnabled
-					img.crossOrigin = "anonymous"
+					if(this.imgScale !== 1 || force){
+						img.crossOrigin = "Anonymous"
+					}
 					var url = gameConfig.assets_baseurl + "img/" + filenameAb + ".png"
 					this.addPromise(pageEvents.load(img).then(() => {
 						return this.scaleImg(img, filenameAb, "", force)
@@ -249,61 +237,102 @@ class LoadSong{
 			if(force && scale > 0.5){
 				scale = 0.5
 			}
-			var canvas = document.createElement("canvas")
-			var w = Math.floor(img.width * scale)
-			var h = Math.floor(img.height * scale)
-			canvas.width = Math.max(1, w)
-			canvas.height = Math.max(1, h)
-			var ctx = canvas.getContext("2d")
-			ctx.drawImage(img, 0, 0, w, h)
-			var saveScaled = url => {
-				let img2 = document.createElement("img")
-				pageEvents.load(img2).then(() => {
-					assets.image[prefix + filename] = img2
-					loader.assetsDiv.appendChild(img2)
-					resolve()
-				}, reject)
-				img2.id = prefix + filename
-				img2.src = url
-			}
-			if("toBlob" in canvas){
-				canvas.toBlob(blob => {
-					saveScaled(URL.createObjectURL(blob))
-				})
+			if(scale !== 1){
+				var canvas = document.createElement("canvas")
+				var w = Math.floor(img.width * scale)
+				var h = Math.floor(img.height * scale)
+				canvas.width = Math.max(1, w)
+				canvas.height = Math.max(1, h)
+				var ctx = canvas.getContext("2d")
+				ctx.drawImage(img, 0, 0, w, h)
+				var saveScaled = url => {
+					let img2 = document.createElement("img")
+					pageEvents.load(img2).then(() => {
+						assets.image[prefix + filename] = img2
+						resolve()
+					}, reject)
+					img2.src = url
+				}
+				if("toBlob" in canvas){
+					canvas.toBlob(blob => {
+						saveScaled(URL.createObjectURL(blob))
+					})
+				}else{
+					saveScaled(canvas.toDataURL())
+				}
 			}else{
-				saveScaled(canvas.toDataURL())
+				assets.image[prefix + filename] = img
+				resolve()
 			}
 		})
 	}
 	randInt(min, max){
 		return Math.floor(Math.random() * (max - min + 1)) + min
 	}
+	cloneSong(song){
+		var clone = {}
+		for(var name in song){
+			clone[name] = song[name]
+		}
+		if(clone.mods){
+			clone.mods = this.cloneModifiers(clone.mods)
+		}
+		return clone
+	}
+	cloneModifiers(mods){
+		var clone = {
+			speed: mods && mods.speed || 1,
+			inverse: !!(mods && mods.inverse),
+			shuffle: mods && mods.shuffle || 0,
+			doron: !!(mods && mods.doron),
+			hardcore: !!(mods && mods.hardcore),
+			allDon: !!(mods && mods.allDon),
+			allKat: !!(mods && mods.allKat)
+		}
+		if(mods && "shuffleSeed" in mods){
+			clone.shuffleSeed = parseInt(mods.shuffleSeed, 10) || 0
+		}
+		return clone
+	}
+	applyRemoteSettings(song, value){
+		value = value || {}
+		if(value.mods && typeof value.mods === "object"){
+			song.mods = this.cloneModifiers(value.mods)
+		}
+		if("soundEffect" in value){
+			var soundEffect = parseInt(value.soundEffect, 10)
+			if(soundEffect > 0){
+				song.soundEffect = soundEffect
+			}
+		}
+		return song
+	}
 	setupMultiplayer(){
 		var song = this.selectedSong
-		
+
 		if(this.multiplayer){
 			var loadingText = document.getElementsByClassName("loading-text")[0]
 			loadingText.firstChild.data = strings.waitingForP2
 			loadingText.setAttribute("alt", strings.waitingForP2)
-			
+
 			this.cancelButton = document.getElementById("p2-cancel-button")
 			this.cancelButton.style.display = "inline-block"
 			pageEvents.add(this.cancelButton, ["mousedown", "touchstart"], this.cancelLoad.bind(this))
-			
+
 			this.song2Data = this.songData
 			this.selectedSong2 = song
 			pageEvents.add(p2, "message", event => {
 				if(event.type === "gameload"){
+					var value = event.value || {}
+					var remoteSong = this.applyRemoteSettings(this.cloneSong(song), value)
 					this.cancelButton.style.display = ""
-					
-					if(event.value.diff === song.difficulty){
+
+					if(value.diff === song.difficulty){
+						this.selectedSong2 = remoteSong
 						this.startMultiplayer()
 					}else{
-						this.selectedSong2 = {}
-						for(var i in this.selectedSong){
-							this.selectedSong2[i] = this.selectedSong[i]
-						}
-						this.selectedSong2.difficulty = event.value.diff
+						this.selectedSong2 = remoteSong
+						this.selectedSong2.difficulty = value.diff
 						var chart = this.songObj.chart
 						var chartDiff = this.selectedSong2.difficulty
 						if(song.type === "tja" || !chart || !chart.separateDiff || !chart[chartDiff]){
@@ -319,10 +348,19 @@ class LoadSong{
 				}else if(event.type === "gamestart"){
 					this.clean()
 					p2.clearMessage("songsel")
-					var taikoGame1 = new Controller(song, this.songData, false, 1, this.touchEnabled)
-					var taikoGame2 = new Controller(this.selectedSong2, this.song2Data, true, 2, this.touchEnabled)
+					var selectedSong1 = this.cloneSong(song)
+					var selectedSong2 = this.cloneSong(this.selectedSong2)
+					var useTjaPlayerSections = selectedSong1.type === "tja" && selectedSong2.difficulty === selectedSong1.difficulty
+					selectedSong1.tjaUsePlayerSections = useTjaPlayerSections
+					selectedSong2.tjaUsePlayerSections = useTjaPlayerSections
+					if(useTjaPlayerSections){
+						selectedSong1.tjaChartPlayer = p2.player === 2 ? 2 : 1
+						selectedSong2.tjaChartPlayer = p2.player === 2 ? 1 : 2
+					}
+					var taikoGame1 = new Controller(selectedSong1, this.songData, false, 1, this.touchEnabled)
+					var taikoGame2 = new Controller(selectedSong2, this.song2Data, true, 2, this.touchEnabled)
 					taikoGame1.run(taikoGame2)
-					pageEvents.send("load-song-player2", this.selectedSong2)
+					pageEvents.send("load-song-player2", selectedSong2)
 				}else if(event.type === "left" || event.type === "gameend"){
 					this.clean()
 					new SongSelect(false, false, this.touchEnabled)
@@ -332,7 +370,9 @@ class LoadSong{
 				id: song.folder,
 				diff: song.difficulty,
 				name: account.loggedIn ? account.displayName : null,
-				don: account.loggedIn ? account.don : null
+				don: account.loggedIn ? account.don : null,
+				mods: this.cloneModifiers(song.mods),
+				soundEffect: song.soundEffect
 			})
 		}else{
 			this.clean()
@@ -353,6 +393,28 @@ class LoadSong{
 			}, 100)
 		}
 	}
+	static insertBackgroundVideo(songId) {
+        const video = document.createElement("video");
+        video.src = `songs/${songId}/main.mp4`;
+        video.autoplay = false;                     // 不自动播放，等游戏音频同步启动
+        video.muted = true;                         // 静音（音频由游戏 mp3 负责）
+        video.preload = "auto";                     // 预加载视频数据
+        video.playsInline = true;                   // 防止某些浏览器接管播放
+        video.disablePictureInPicture = true;       // 禁用画中画减少额外开销
+        video.style.objectFit = 'cover';
+        video.style.position = 'fixed';
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.zIndex = "0";                   // 背景视频
+        video.style.width = "100vw";
+        video.style.height = "100vh";
+        video.style.transform = "translateZ(0)";    // 强制开启 GPU 硬件加速
+        video.style.willChange = "transform";       // 提示浏览器优化渲染
+        video.style.display = "none";               // 隐藏直到游戏开始
+        document.body.appendChild(video);
+        window.videoElement = video;
+    }
+
 	cancelLoad(event){
 		if(event.type === "mousedown"){
 			if(event.which !== 1){
@@ -376,28 +438,4 @@ class LoadSong{
 			delete this.cancelButton
 		}
 	}
-	
-	static insertBackgroundVideo(songId) {
-        const video = document.createElement("video");
-        video.src = `songs/${songId}/main.mp4`;
-        video.autoplay = false;                     // 不自动播放，等游戏音频同步启动
-        video.muted = true;                         // 静音（音频由游戏 mp3 负责）
-        video.preload = "auto";                     // 预加载视频数据
-        video.playsInline = true;                   // 防止某些浏览器接管播放
-        video.disablePictureInPicture = true;       // 禁用画中画减少额外开销
-        video.style.objectFit = 'cover';
-        video.style.position = 'fixed';
-        video.style.top = "0";
-        video.style.left = "0";
-        video.style.zIndex = "0";                   // 背景视频
-        video.style.width = "100vw";
-        video.style.height = "100vh";
-        video.style.transform = "translateZ(0)";    // 强制开启 GPU 硬件加速
-        video.style.willChange = "transform";       // 提示浏览器优化渲染
-        video.style.display = "none";               // 隐藏直到游戏开始
-        document.body.appendChild(video);
-        window.videoElement = video;
-    }
-
-	
 }

@@ -6,9 +6,14 @@ class Controller{
 		this.selectedSong = selectedSong
 		this.songData = songData
 		this.autoPlayEnabled = autoPlayEnabled
+		this.mods = selectedSong.mods;
 		this.saveScore = !autoPlayEnabled
+		if(this.mods && (this.mods.allDon || this.mods.allKat)){
+			this.saveScore = false
+		}
 		this.multiplayer = multiplayer
 		this.touchEnabled = touchEnabled
+		this.soundEffect = this.getSoundEffect(selectedSong.soundEffect)
 		if(multiplayer === 2){
 			this.snd = p2.player === 2 ? "_p1" : "_p2"
 			this.don = p2.don || defaultDon
@@ -22,7 +27,7 @@ class Controller{
 				face_fill: defaultDon.body_fill
 			}
 		}
-		
+
 		this.calibrationMode = selectedSong.folder === "calibration"
 		this.audioLatency = 0
 		this.videoLatency = 0
@@ -36,19 +41,22 @@ class Controller{
 		if(this.multiplayer !== 2){
 			loader.changePage("game", false)
 		}
-		
+
 		if(selectedSong.type === "tja"){
-			this.parsedSongData = new ParseTja(songData, selectedSong.difficulty, selectedSong.stars, selectedSong.offset)
+			this.parsedSongData = new ParseTja(songData, selectedSong.difficulty, selectedSong.stars, selectedSong.offset, false, selectedSong.mods, {
+				player: this.getTjaChartPlayer(),
+				usePlayerSections: this.multiplayer && selectedSong.tjaUsePlayerSections
+			})
 		}else{
-			this.parsedSongData = new ParseOsu(songData, selectedSong.difficulty, selectedSong.stars, selectedSong.offset)
+			this.parsedSongData = new ParseOsu(songData, selectedSong.difficulty, selectedSong.stars, selectedSong.offset, false, selectedSong.mods)
 		}
 		this.offset = this.parsedSongData.soundOffset
-		
+
 		var maxCombo = this.parsedSongData.circles.filter(circle => ["don", "ka", "daiDon", "daiKa"].indexOf(circle.type) > -1 && (!circle.branch || circle.branch.name == "master")).length
 		if (maxCombo >= 50) {
 			var comboVoices = ["v_combo_50"].concat(Array.from(Array(Math.min(50, Math.floor(maxCombo / 100))), (d, i) => "v_combo_" + ((i + 1) * 100)))
 			var promises = []
-			
+
 			comboVoices.forEach(name => {
 				if (!assets.sounds[name + "_p1"]) {
 					promises.push(loader.loadSound(name + ".ogg", snd.sfxGain).then(sound => {
@@ -57,10 +65,10 @@ class Controller{
 					}))
 				}
 			})
-			
+
 			Promise.all(promises)
 		}
-		
+
 		if(this.calibrationMode){
 			this.volume = 1
 		}else{
@@ -80,7 +88,7 @@ class Controller{
 				}
 			})
 		}
-		
+
 		this.game = new Game(this, this.selectedSong, this.parsedSongData)
 		this.view = new View(this)
 		this.mekadon = new Mekadon(this, this.game)
@@ -90,9 +98,21 @@ class Controller{
 		}else{
 			this.easierBigNotes = false
 		}
-		
+
 		this.drumSounds = settings.getItem("latency").drumSounds
 		this.playedSounds = {}
+	}
+	getTjaChartPlayer(){
+		if(this.selectedSong.tjaChartPlayer === 1 || this.selectedSong.tjaChartPlayer === 2){
+			return this.selectedSong.tjaChartPlayer
+		}
+		if(!this.multiplayer){
+			return 1
+		}
+		if(this.multiplayer === 2){
+			return p2.player === 2 ? 1 : 2
+		}
+		return p2.player === 2 ? 2 : 1
 	}
 	run(syncWith){
 		if(syncWith){
@@ -101,6 +121,7 @@ class Controller{
 		if(this.multiplayer !== 2){
 			snd.musicGain.setVolumeMul(this.volume)
 		}
+		this.warmupInputSounds()
 		this.game.run()
 		this.view.run()
 		if(this.multiplayer === 1){
@@ -148,7 +169,6 @@ class Controller{
         window.videoElement = null;
     }
 		
-		
 		if(this.game.mainAsset){
 			this.game.mainAsset.stop()
 		}
@@ -163,7 +183,7 @@ class Controller{
 				this.syncWith.game.startDate = this.game.startDate
 			}
 			var ms = this.game.elapsedTime
-			
+
 			if(this.game.musicFadeOut < 3){
 				this.keyboard.checkMenuKeys()
 			}
@@ -172,7 +192,7 @@ class Controller{
 			}
 			if(!this.game.isPaused()){
 				this.keyboard.checkGameKeys()
-				
+
 				if(ms < 0){
 					this.game.updateTime()
 				}else{
@@ -223,7 +243,10 @@ class Controller{
 		var score = this.getGlobalScore()
 		var vp
 		if(this.game.rules.clearReached(score.gauge)){
-			if(score.bad === 0){
+			if(score.ok === 0 && score.bad === 0){ // TODO: donder fullcombo
+				vp = "donderfulcombo"
+                                this.playSound("v_blank", 0.050)
+							}else if(score.bad === 0){
 				vp = "fullcombo"
 				this.playSound("v_fullcombo", 1.350)
 			}else{
@@ -242,8 +265,8 @@ class Controller{
 			this.scoresheet = new Scoresheet(this, this.getGlobalScore(), this.multiplayer, this.touchEnabled)
 		}
 	}
-	displayScore(score, notPlayed, bigNote){
-		this.view.displayScore(score, notPlayed, bigNote)
+	displayScore(score, notPlayed, bigNote, adlib){
+		this.view.displayScore(score, notPlayed, bigNote, adlib)
 	}
 	songSelection(fadeIn, showWarning){
 		if(!fadeIn){
@@ -325,8 +348,34 @@ class Controller{
 			return Promise.reject(error)
 		}))
 	}
+	getSoundEffect(value){
+		var soundEffect = parseInt(value, 10)
+		if(!soundEffect){
+			try{
+				soundEffect = parseInt(localStorage.getItem("vOneLocalStorage"), 10)
+			}catch(e){}
+		}
+		if(!soundEffect || soundEffect < 1){
+			return 1
+		}
+		return Math.min(30, soundEffect)
+	}
+	warmupInputSounds(){
+		if(this.inputSoundsWarmed || !this.drumSounds){
+			return
+		}
+		this.inputSoundsWarmed = true
+		var prefix = "neiro_" + this.soundEffect + "_"
+		;["don", "ka"].forEach(type => {
+			var id = prefix + type
+			var sound = assets.sounds[id + this.snd] || assets.sounds[id]
+			if(sound && sound.warmup){
+				sound.warmup()
+			}
+		})
+	}
 	playSound(id, time, noSnd){
-		if(!this.drumSounds && (id === "neiro_1_don" || id === "neiro_1_ka" || id === "se_don" || id === "se_ka")){
+		if(!this.drumSounds && (id === "neiro_1_don" || id === "neiro_1_ka" || id === "neiro_2_don" || id === "neiro_2_ka" || id === "neiro_3_don" || id === "neiro_3_ka" || id === "neiro_4_don" || id === "neiro_4_ka" || id === "neiro_5_don" || id === "neiro_5_ka" || id === "neiro_6_don" || id === "neiro_6_ka" || id === "neiro_7_don" || id === "neiro_7_ka" || id === "neiro_8_don" || id === "neiro_8_ka" || id === "neiro_9_don" || id === "neiro_9_ka" || id === "neiro_10_don" || id === "neiro_10_ka" || id === "neiro_11_don" || id === "neiro_11_ka" || id === "neiro_12_don" || id === "neiro_12_ka" || id === "neiro_13_don" || id === "neiro_13_ka" || id === "neiro_14_don" || id === "neiro_14_ka" || id === "neiro_15_don" || id === "neiro_15_ka" || id === "neiro_16_don" || id === "neiro_16_ka" || id === "neiro_17_don" || id === "neiro_17_ka" || id === "neiro_18_don" || id === "neiro_18_ka" || id === "neiro_19_don" || id === "neiro_19_ka" || id === "neiro_20_don" || id === "neiro_20_ka" || id === "neiro_21_don" || id === "neiro_21_ka" || id === "neiro_22_don" || id === "neiro_22_ka" || id === "neiro_23_don" || id === "neiro_23_ka" || id === "neiro_24_don" || id === "neiro_24_ka" || id === "neiro_25_don" || id === "neiro_25_ka" || id === "neiro_26_don" || id === "neiro_26_ka" || id === "neiro_27_don" || id === "neiro_27_ka" || id === "neiro_28_don" || id === "neiro_28_ka" || id === "neiro_29_don" || id === "neiro_29_ka" || id === "neiro_30_don" || id === "neiro_30_ka" || id === "se_don" || id === "se_ka")){
 			return
 		}
 		var ms = Date.now() + (time || 0) * 1000
@@ -340,8 +389,6 @@ class Controller{
 			this.syncWith.game.togglePause(forcePause, pauseMove, noSound)
 		}
 		this.game.togglePause(forcePause, pauseMove, noSound)
-		
-		
 	}
 	getKeys(){
 		return this.keyboard.getKeys()
@@ -397,7 +444,7 @@ class Controller{
 		this.keyboard.clean()
 		this.view.clean()
 		snd.buffer.loadSettings()
-		
+
 		if(!this.multiplayer){
 			debugObj.controller = null
 			if(debugObj.debug){
@@ -407,5 +454,37 @@ class Controller{
 		if(this.lyrics){
 			this.lyrics.clean()
 		}
+	}
+	getModBadges() {
+		var badges = []
+		if(!this.mods){
+			return badges
+		}
+		if (this.mods.speed > 1) {
+			badges.push("badge_x" + this.mods.speed.toString())
+		}
+		if (this.mods.inverse) {
+			badges.push("badge_s1")
+		}
+		if (this.mods.shuffle > 0) {
+			badges.push("badge_s" + this.mods.shuffle.toString())
+		}
+		if (this.mods.doron) {
+			badges.push("badge_doron")
+		}
+		if (this.mods.hardcore) {
+			badges.push("badge_kanbeki")
+		}
+		if (this.mods.allDon) {
+			badges.push("badge_don")
+		} else if (this.mods.allKat) {
+			badges.push("badge_kat")
+		}
+
+		return badges
+	}
+	getModBadge() {
+		var badges = this.getModBadges()
+		return badges.length ? badges[0] : null
 	}
 }

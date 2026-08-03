@@ -1,7 +1,63 @@
+function getEncodingFallbacks(encoding){
+	if(!encoding){
+		return null
+	}
+	var normalized = encoding.toLowerCase()
+	if(normalized === "sjis" || normalized === "shift_jis" || normalized === "shift-jis" || normalized === "cp932" || normalized === "windows-31j"){
+		return ["utf-8", "shift_jis"]
+	}
+	return null
+}
+function mojibakeScore(text){
+	var score = 0
+	var common = /[�縺繧譁荳莨驥髫鬆鬱隕邱螟]/g
+	var controls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/g
+	var matches = text.match(common)
+	if(matches){
+		score += matches.length * 10
+	}
+	matches = text.match(controls)
+	if(matches){
+		score += matches.length * 20
+	}
+	return score
+}
+function decodeTextFallback(buffer, encodings){
+	if(typeof TextDecoder === "undefined"){
+		return null
+	}
+	var best = null
+	for(var i = 0; i < encodings.length; i++){
+		try{
+			var text = new TextDecoder(encodings[i], {fatal: true}).decode(buffer)
+			var score = mojibakeScore(text)
+			if(!best || score < best.score){
+				best = {text: text, score: score}
+			}
+		}catch(e){}
+	}
+	if(best){
+		return best.text
+	}
+	return new TextDecoder(encodings[encodings.length - 1]).decode(buffer)
+}
 function readFile(file, arrayBuffer, encoding){
 	var reader = new FileReader()
-	var promise = pageEvents.load(reader).then(event => event.target.result)
-	reader[arrayBuffer ? "readAsArrayBuffer" : "readAsText"](file, encoding)
+	var fallbacks = getEncodingFallbacks(encoding)
+	var promise = pageEvents.load(reader).then(event => {
+		if(fallbacks && !arrayBuffer){
+			var text = decodeTextFallback(event.target.result, fallbacks)
+			if(text !== null){
+				return text
+			}
+		}
+		return event.target.result
+	})
+	if(fallbacks || arrayBuffer){
+		reader.readAsArrayBuffer(file)
+	}else{
+		reader.readAsText(file, encoding)
+	}
 	return promise
 }
 function filePermission(file){
@@ -33,17 +89,10 @@ class RemoteFile{
 		if(this.path.startsWith("/")){
 			this.path = this.path.slice(1)
 		}
-		if(this.url.startsWith("data:")){
-			this.name = "datauri"
-			if(this.url.startsWith("data:audio/ogg")){
-				this.name += ".ogg"
-			}
-		}else{
-			this.name = this.path
-			var index = this.name.lastIndexOf("/")
-			if(index !== -1){
-				this.name = this.name.slice(index + 1)
-			}
+		this.name = this.path
+		var index = this.name.lastIndexOf("/")
+		if(index !== -1){
+			this.name = this.name.slice(index + 1)
 		}
 	}
 	arrayBuffer(){
@@ -59,9 +108,7 @@ class RemoteFile{
 		}
 	}
 	blob(){
-		return loader.ajax(this.url, request => {
-			request.responseType = "blob"
-		})
+		return this.arrayBuffer().then(response => new Blob([response]))
 	}
 }
 class LocalFile{
@@ -115,7 +162,7 @@ class GdriveFile{
 		this.url = gpicker.filesUrl + this.id + "?alt=media"
 	}
 	arrayBuffer(){
-		return gpicker.downloadFile(this.id, "arraybuffer")
+		return gpicker.downloadFile(this.id, true)
 	}
 	read(encoding){
 		if(encoding){
@@ -125,7 +172,7 @@ class GdriveFile{
 		}
 	}
 	blob(){
-		return gpicker.downloadFile(this.id, "blob")
+		return this.arrayBuffer().then(response => new Blob([response]))
 	}
 }
 class CachedFile{
@@ -146,6 +193,6 @@ class CachedFile{
 		return this.arrayBuffer()
 	}
 	blob(){
-		return this.arrayBuffer()
+		return this.arrayBuffer().then(response => new Blob([response]))
 	}
 }

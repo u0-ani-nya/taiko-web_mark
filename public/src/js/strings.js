@@ -1,4 +1,4 @@
-﻿var languageList = ["ja", "en", "cn", "tw", "ko"]
+var languageList = ["ja", "en", "cn", "tw", "ko"]
 var translations = {
 	name: {
 		ja: "日本語",
@@ -28,30 +28,29 @@ var translations = {
 		tw: "zh-Hant",
 		ko: "ko"
 	},
-	
 	taikoWeb: {
 		ja: "たいこウェブ",
 		en: "Taiko Web",
-		cn: "太鼓达人在线模拟器",
-		tw: "太鼓網",
+		cn: "太鼓网页",
+		tw: "太鼓網頁",
 		ko: "태고 웹"
 	},
 	titleProceed: {
-		ja: "RE!",
-		en: "RE!",
-		cn: "RE!",
-		tw: "RE!",
-		ko: "RE!"
+		ja: "クリックするかEnterを押す！",
+		en: "Click or Press Enter!",
+		cn: "点击或按回车！",
+		tw: "點擊或按確認！",
+		ko: "클릭하거나 Enter를 누르세요!"
 	},
 	titleDisclaimer: {
 		ja: "この非公式シミュレーターはバンダイナムコとは関係がありません。",
-		en: "simulator is unaffiliated with BANDAI. ",
-		cn: "模拟器与BANDAI无关。",
-		tw: "模擬器與 BANDAI無關。",
-		ko: "simulator is unaffiliated with BANDAI. "
+		en: "This unofficial simulator is unaffiliated with BANDAI NAMCO.",
+		cn: "这款非官方模拟器与BANDAI NAMCO无关。",
+		tw: "這款非官方模擬器與 BANDAI NAMCO 無關。",
+		ko: "이 비공식 시뮬레이터는 반다이 남코와 관련이 없습니다."
 	},
 	titleCopyright: {
-		en: ""
+		en: "Taiko no Tatsujin ©&™ 2011 BANDAI NAMCO Entertainment Inc."
 	},
 	selectSong: {
 		ja: "曲をえらぶ",
@@ -109,6 +108,216 @@ var translations = {
 		tw: "遊戲設定",
 		ko: "게임 설정"
 	},
+	songSuggest: {
+		ja: "曲の提案",
+		en: "Song Suggesting",
+		cn: "歌曲建议",
+		tw: "歌曲建議",
+		ko: "노래 제안"
+	},
+	soundOptions: {
+		ja: "音色",
+		en: "sound",
+		cn: "音色",
+		tw: "音色",
+		ko: "sound"
+	},
+	taikoS: {
+		ja: "太鼓",
+		en: "太鼓",
+		cn: "太鼓",
+		tw: "太鼓",
+		ko: "太鼓"
+	},
+	testS: {
+		ja: "どんちゃん",
+		en: "どんちゃん",
+		cn: "どんちゃん",
+		tw: "どんちゃん",
+		ko: "どんちゃん"
+	},
+	s3: {
+		ja: "豪華な太鼓",
+		en: "豪華な太鼓",
+		cn: "豪華な太鼓",
+		tw: "豪華な太鼓",
+		ko: "豪華な太鼓"
+	},
+	s4: {
+		ja: "太古の太鼓",
+		en: "太古の太鼓",
+		cn: "太古の太鼓",
+		tw: "太古の太鼓",
+		ko: "太古の太鼓"
+	},
+	s5: {
+		ja: "ドラム",
+		en: "ドラム",
+		cn: "ドラム",
+		tw: "ドラム",
+		ko: "ドラム"
+	},
+	s6: {
+		ja: "シンセドラム",
+		en: "シンセドラム",
+		cn: "シンセドラム",
+		tw: "シンセドラム",
+		ko: "シンセドラム"
+	},
+	s7: {
+		ja: "ドラゴンドラム",
+		en: "ドラゴンドラム",
+		cn: "ドラゴンドラム",
+		tw: "ドラゴンドラム",
+		ko: "ドラゴンドラム"
+	},
+	s8: {
+		ja: "もくぎょ",
+		en: "もくぎょ",
+		cn: "もくぎょ",
+		tw: "もくぎょ",
+		ko: "もくぎょ"
+	},
+	s9: {
+		ja: "メドル太鼓",
+		en: "メドル太鼓",
+		cn: "メドル太鼓",
+		tw: "メドル太鼓",
+		ko: "メドル太鼓"
+	},
+	s10: {
+		ja: "ヘビメタ太鼓",
+		en: "ヘビメタ太鼓",
+		cn: "ヘビメタ太鼓",
+		tw: "ヘビメタ太鼓",
+		ko: "ヘビメタ太鼓"
+	},
+	s11: {
+		ja: "コンガ",
+		en: "コンガ",
+		cn: "コンガ",
+		tw: "コンガ",
+		ko: "コンガ"
+	},
+	s12: {
+		ja: "大地のコンガ",
+		en: "大地のコンガ",
+		cn: "大地のコンガ",
+		tw: "大地のコンガ",
+		ko: "大地のコンガ"
+	},
+	s13: {
+		ja: "手裏剣",
+		en: "手裏剣",
+		cn: "手裏剣",
+		tw: "手裏剣",
+		ko: "手裏剣"
+	},
+	s14: {
+		ja: "神風手裏剣",
+		en: "神風手裏剣",
+		cn: "神風手裏剣",
+		tw: "神風手裏剣",
+		ko: "神風手裏剣"
+	},
+	s15: {
+		ja: "剣道",
+		en: "剣道",
+		cn: "剣道",
+		tw: "剣道",
+		ko: "剣道"
+	},
+	s16: {
+		ja: "和田かつ",
+		en: "和田かつ",
+		cn: "和田かつ",
+		tw: "和田かつ",
+		ko: "和田かつ"
+	},
+	s17: {
+		ja: "ドラ",
+		en: "ドラ",
+		cn: "ドラ",
+		tw: "ドラ",
+		ko: "ドラ"
+	},
+	s18: {
+		ja: "フライパン",
+		en: "フライパン",
+		cn: "フライパン",
+		tw: "フライパン",
+		ko: "フライパン"
+	},
+	s19: {
+		ja: "クイズ",
+		en: "クイズ",
+		cn: "クイズ",
+		tw: "クイズ",
+		ko: "クイズ"
+	},
+	s20: {
+		ja: "野球",
+		en: "野球",
+		cn: "野球",
+		tw: "野球",
+		ko: "野球"
+	},
+	s21: {
+		ja: "サッカー",
+		en: "サッカー",
+		cn: "サッカー",
+		tw: "サッカー",
+		ko: "サッカー"
+	},
+	s22: {
+		ja: "メカドン",
+		en: "メカドン",
+		cn: "メカドン",
+		tw: "メカドン",
+		ko: "メカドン"
+	},
+	s23: {
+		ja: "小太鼓",
+		en: "小太鼓",
+		cn: "小太鼓",
+		tw: "小太鼓",
+		ko: "小太鼓"
+	},
+	s24: {
+		ja: "雷太鼓",
+		en: "雷太鼓",
+		cn: "雷太鼓",
+		tw: "雷太鼓",
+		ko: "雷太鼓"
+	},
+	s25: {
+		ja: "和田兄弟",
+		en: "和田兄弟",
+		cn: "和田兄弟",
+		tw: "和田兄弟",
+		ko: "和田兄弟"
+	},
+	s26: {
+		ja: "タンバリン",
+		en: "タンバリン",
+		cn: "タンバリン",
+		tw: "タンバリン",
+		ko: "タンバリン"
+	},
+	s27: {
+		ja: "お祭り",
+		en: "お祭り",
+		cn: "お祭り",
+		tw: "お祭り",
+		ko: "お祭り"
+	},
+	s28: {
+		ja: "無音",
+		en: "無音",
+		cn: "無音",
+		tw: "無音",
+		ko: "無音"
+	},
 	songOptions: {
 		ja: "演奏オプション",
 		en: "Song Options",
@@ -124,18 +333,18 @@ var translations = {
 		ko: "없음"
 	},
 	auto: {
-		ja: "オート",
-		en: "Auto",
-		cn: "自动",
-		tw: "自動",
-		ko: "자동"
+		ja: "オート(無効な2Pモード)",
+		en: "Auto(Not in 2P mode)",
+		cn: "自动(2P模式无效)",
+		tw: "自動(2P模式無效)",
+		ko: "자동(잘못된2P모드)"
 	},
 	netplay: {
-		ja: "ネットプレイ",
-		en: "Netplay",
-		cn: "网络对战",
-		tw: "網上對打",
-		ko: "온라인 대전"
+		ja: "ネットプレイ(無効な2Pモード)",
+		en: "Netplay(Not in 2P mode)",
+		cn: "网络对战(2P模式无效)",
+		tw: "網上對打(2P模式無效)",
+		ko: "온라인 대전(잘못된2P모드)"
 	},
 	easy: {
 		ja: "かんたん",
@@ -210,18 +419,29 @@ var translations = {
 	scoreSaveFailed: {
 		ja: "サーバーに接続できませんでした。スコアは保存されていません。\n\nログインするか、ページを更新して、再度スコアの保存をお試しください。",
 		en: "Could not connect to the server, your score has not been saved.\n\nPlease log in or refresh the page to try saving the score again.",
-		tw: "無法連接至伺服器，你的成績未能儲存。若要儲存成績，請登入或重新載入頁面。",
-		ko: "서버에 연결되지 않아 점수가 저장되지 않았습니다.\n\n로그인하거나 페이지를 새로고침하여 점수를 다시 저장할 수 있습니다."
+		tw: "無法連接至伺服器，你的成績未能儲存。若要儲存成績，請登入或重新載入頁面。"
+	},
+	scoreNotSavedWarning: {
+		ja: "このオプションではスコアは保存されません",
+		en: "Scores will not be saved with this option",
+		cn: "使用此选项时不会保存成绩",
+		tw: "使用此選項時不會儲存成績",
+		ko: "이 옵션을 사용하면 점수가 저장되지 않습니다"
+	},
+	autoUnavailable2PWarning: {
+		ja: "2Pモードではオートは使用できません",
+		en: "Auto does not work in 2P mode",
+		cn: "2P模式下无法使用自动演奏",
+		tw: "2P模式下無法使用自動演奏",
+		ko: "2P 모드에서는 자동 연주를 사용할 수 없습니다"
 	},
 	loadSongError: {
 		ja: "曲「%s」を読み込むことができませんでした。（ID：%s）\n\n%s",
-		en: "Could not load song %s with ID %s.\n\n%s",
-		ko: "곡 %s (ID:%s)를 로드할 수 없습니다.\n\n%s"
+		en: "Could not load song %s with ID %s.\n\n%s"
 	},
 	accessNotGrantedError: {
 		ja: "ファイルへのアクセス権が拒否されました",
-		en: "Permission to access the file was not granted",
-		ko: "파일에 접근할 수 있는 권한이 부여되지 않았습니다."
+		en: "Permission to access the file was not granted"
 	},
 	loading: {
 		ja: "ロード中...",
@@ -294,6 +514,13 @@ var translations = {
 			tw: "氣球",
 			ko: "풍선"
 		},
+		green: {
+			ja: "???",
+			en: "???",
+			cn: "???",
+			tw: "???",
+			ko: "???"
+		},
 	},
 	ex_note: {
 		don: {
@@ -359,6 +586,13 @@ var translations = {
 		cn: "不可",
 		tw: "不可",
 		ko: "에구"
+	},
+	adlib: {
+		ja: "AD-LIB",
+		en: "AD-LIB",
+		cn: "AD-LIB",
+		tw: "AD-LIB",
+		ko: "AD-LIB"
 	},
 	branch: {
 		normal: {
@@ -442,8 +676,7 @@ var translations = {
 	errorOccured: {
 		ja: "エラーが発生しました。再読み込みしてください。",
 		en: "An error occurred, please refresh",
-		tw: "發生錯誤，請重新載入頁面。",
-		ko: "오류가 발생했습니다. 페이지를 새로 고침하시기 바랍니다."
+		tw: "發生錯誤，請重新載入頁面。"
 	},
 	tutorial: {
 		basics: {
@@ -590,8 +823,7 @@ var translations = {
 		issueTemplate: {
 			ja: "###### 下記の問題を説明してください。 スクリーンショットと診断情報を含めてください。",
 			en: "###### Describe the problem you are having below. Please include a screenshot and the diagnostic information.",
-			tw: "###### 在下方說明您遇到的問題。請一併傳送截圖及診斷資料。",
-			ko: "###### 겪고 있는 문제를 아래에 적어주시기 바랍니다. 스크린샷과 진단 정보가 포함되어야 합니다."
+			tw: "###### 在下方說明您遇到的問題。請一併傳送截圖及診斷資料。"
 		},
 		issues: {
 			ja: "課題",
@@ -634,12 +866,63 @@ var translations = {
 				ko: "언어"
 			}
 		},
+		tjaTitle: {
+			name: {
+				ja: "TJAタイトル",
+				en: "TJA Title",
+				cn: "TJA 标题",
+				tw: "TJA 標題",
+				ko: "TJA 제목"
+			},
+			title: {
+				ja: "TITLE",
+				en: "TITLE",
+				cn: "TITLE",
+				tw: "TITLE",
+				ko: "TITLE"
+			},
+			titleja: {
+				ja: "TITLEJA",
+				en: "TITLEJA",
+				cn: "TITLEJA",
+				tw: "TITLEJA",
+				ko: "TITLEJA"
+			},
+			titleen: {
+				ja: "TITLEEN",
+				en: "TITLEEN",
+				cn: "TITLEEN",
+				tw: "TITLEEN",
+				ko: "TITLEEN"
+			},
+			titlecn: {
+				ja: "TITLECN",
+				en: "TITLECN",
+				cn: "TITLECN",
+				tw: "TITLECN",
+				ko: "TITLECN"
+			},
+			titletw: {
+				ja: "TITLETW",
+				en: "TITLETW",
+				cn: "TITLETW",
+				tw: "TITLETW",
+				ko: "TITLETW"
+			},
+			titleko: {
+				ja: "TITLEKO",
+				en: "TITLEKO",
+				cn: "TITLEKO",
+				tw: "TITLEKO",
+				ko: "TITLEKO"
+			}
+		},
 		resolution: {
 			name: {
 				ja: "ゲームの解像度",
 				en: "Game Resolution",
 				cn: "游戏分辨率",
-				tw: "遊戲解析度",
+				tw: "遊戲分辨率",
 				ko: "게임 해상도"
 			},
 			high: {
@@ -729,62 +1012,62 @@ var translations = {
 				ja: "タイプA",
 				en: "Type A",
 				cn: "类型A",
-				tw: "類型 A",
+				tw: "類型A",
 				ko: "타입 A"
 			},
 			b: {
 				ja: "タイプB",
 				en: "Type B",
 				cn: "类型B",
-				tw: "類型 B",
+				tw: "類型B",
 				ko: "타입 B"
 			},
 			c: {
 				ja: "タイプC",
 				en: "Type C",
 				cn: "类型C",
-				tw: "類型 C",
+				tw: "類型C",
 				ko: "타입 C"
 			}
 		},
 		latency: {
 			name: {
-				ja: "レイテンシー",
+				ja: null,
 				en: "Latency",
 				cn: "延迟校准",
-				tw: "延遲校準",
+				tw: "延遲",
 				ko: "레이턴시"
 			},
 			value: {
-				ja: "オーディオ: %s, ビデオ: %s",
+				ja: null,
 				en: "Audio: %s, Video: %s",
 				cn: "音频: %s, 视频: %s",
 				tw: "聲音: %s, 畫面: %s",
 				ko: "오디오: %s, 비디오: %s"
 			},
 			calibration: {
-				ja: "レイテンシー較正",
+				ja: null,
 				en: "Latency Calibration",
 				cn: "自动辅助校准",
 				tw: "自動延遲校正",
 				ko: "레이턴시 조절"
 			},
 			audio: {
-				ja: "オーディオ",
+				ja: null,
 				en: "Audio",
 				cn: "音频",
 				tw: "聲音",
 				ko: "오디오"
 			},
 			video: {
-				ja: "ビデオ",
+				ja: null,
 				en: "Video",
 				cn: "视频",
 				tw: "畫面",
 				ko: "비디오"
 			},
 			drumSounds: {
-				ja: "太鼓の音",
+				ja: null,
 				en: "Drum Sounds",
 				cn: "鼓声",
 				tw: "鼓聲",
@@ -827,7 +1110,7 @@ var translations = {
 			ja: "既定値にリセット",
 			en: "Reset to Defaults",
 			cn: "重置为默认值",
-			tw: "重置為預設值",
+			tw: "重置為默認值",
 			ko: "기본값으로 재설정"
 		},
 		ok: {
@@ -840,98 +1123,81 @@ var translations = {
 	},
 	calibration: {
 		title: {
-			ja: "レイテンシー・キャリブレーション",
+			ja: null,
 			en: "Latency Calibration",
-			tw: "延遲校正",
-			ko: "레이턴시 조절"
+			tw: "延遲校正"
 		},
 		ms: {
-			ja: "%sms",
+			ja: null,
 			en: "%sms",
 		},
 		back: {
-			ja: "「ゲーム設定」に戻る",
+			ja: null,
 			en: "Back to Settings",
-			tw: "返回設定",
-			ko: "설정으로 돌아가기"
+			tw: "返回設定"
 		},
 		retryPrevious: {
-			ja: "前回のリトライ",
+			ja: null,
 			en: "Retry Previous",
-			tw: "重試",
-			ko: "재시도"
+			tw: "重試"
 		},
 		start: {
-			ja: "スタート",
+			ja: null,
 			en: "Start",
-			tw: "開始",
-			ko: "시작"
+			tw: "開始"
 		},
 		finish: {
-			ja: "終了する",
+			ja: null,
 			en: "Finish",
-			tw: "完成",
-			ko: "완료"
+			tw: "完成"
 		},
 		audioHelp: {
 			title: {
-				ja: "オーディオ・レイテンシー・キャリブレーション",
+				ja: null,
 				en: "Audio Latency Calibration",
-				tw: "聲音延遲校正",
-				ko: "오디오 레이턴시 조절"
+				tw: "聲音延遲校正"
 				
 			},
 			content: {
-				ja: "背景で鳴っている音を聴いてみましょう。\n\n音が聞こえたら、太鼓の面（%sまたは%s）をたたこう！",
+				ja: null,
 				en: "Listen to a sound playing in the background.\n\nHit the surface of the drum (%s or %s) as you hear it!",
-				tw: "仔細聆聽背景播放的音效。\n\n聽到音效就敲打鼓面 (%s 或 %s)！",
-				ko: "배경에서 들리는 소리에 귀를 기울여주세요.\n\n소리가 들리면 북(%s 나 %s)을 쳐주세요!"
 			},
 			contentAlt: {
-				ja: "背景で鳴っている音を聴いてみましょう。\n\n音が聞こえたら、太鼓の面をたたこう！",
+				ja: null,
 				en: "Listen to a sound playing in the background.\n\nHit the surface of the drum as you hear it!",
-				tw: "仔細聆聽背景播放的音效。\n\n聽到音效就敲打鼓面！",
-				ko: "배경에서 들리는 소리에 귀를 기울여주세요.\n\n소리가 들리면 북을 쳐주세요!"
 			}
 		},
 		audioComplete: {
-			ja: "オーディオ・レイテンシー・キャリブレーション完了！",
+			ja: null,
 			en: "Audio Latency Calibration completed!",
-			tw: "聲音延遲校正完成！",
-			ko: "오디오 레이턴시 조절 완료!"
+			tw: "聲音延遲校正完成！"
 		},
 		videoHelp: {
 			title: {
-				ja: "ビデオ・レイテンシー・キャリブレーション",
+				ja: null,
 				en: "Video Latency Calibration",
-				tw: "畫面延遲校正",
-				ko: "비디오 레이턴시 조절"
+				tw: "畫面延遲校正"
 			},
 			content: {
-				ja: "今回は音が出ません。\n\n代わりに、丸い枠の中で音符が点滅しているのを見て、音符が現れたら太鼓をたたこう！",
+				ja: null,
 				en: "This time there will be no sounds.\n\nInstead, watch for notes blinking on the circle-shaped frame, hit the drum as they appear!",
-				tw: "這次不會有音效。\n\n請注意正在閃爍音符的圓形框框，當音符出現時就敲打鼓面！",
-				ko: "이번에는 소리가 나오지 않습니다.\n\n대신 원 안에서 깜빡이는 음표에 맞춰 북을 쳐주세요!"
 			}
 		},
 		videoComplete: {
-			ja: "ビデオ・レイテンシー・キャリブレーション完了！",
+			ja: null,
 			en: "Video Latency Calibration completed!",
-			tw: "畫面延遲校正完成！",
-			ko: "비디오 레이턴시 조절 완료!"
+			tw: "畫面延遲校正完成！"
 		},
 		results: {
 			title: {
-				ja: "レイテンシー・キャリブレーション結果",
+				ja: null,
 				en: "Latency Calibration Results",
-				tw: "延遲校正結果",
-				ko: "레이턴시 조절 결과"
+				tw: "延遲校正結果"
 			},
 			content: {
-				ja: "オーディオ・レイテンシー: %s\nビデオ・レイテンシ: %s\n\nこれらのレイテンシーの値は、設定で設定することができます。",
+				ja: null,
 				en: "Audio latency: %s\nVideo latency: %s\n\nYou can configure these latency values in the settings.",
-				tw: "聲音延遲 :%s\n畫面延遲: %s\n\n您可以在設定中調整這些數值。",
-				ko: "오디오 레이턴시: %s\n비디오 레이턴시: %s\n\n설정에서 레이턴시 값들을 조절할 수 있습니다."
+				tw: "聲音延遲 :%s\n畫面延遲: %s\n\n您可以在設定中調整這些數值。"
 			}
 		}
 	},
@@ -1014,10 +1280,9 @@ var translations = {
 			ko: "비밀번호가 일치하지 않습니다"
 		},
 		newPasswordsDoNotMatch: {
-			ja: "新しいパスワードが一致しない",
+			ja: null,
 			en: "New passwords do not match",
-			tw: "新密碼不符合",
-			ko: "새 비밀번호가 일치하지 않습니다"
+			tw: "新密碼不符合"
 		},
 		cannotBeEmpty: {
 			ja: "%sは空にできません",
@@ -1048,54 +1313,43 @@ var translations = {
 			ko: "돌아가기"
 		},
 		cancel: {
-			ja: "キャンセル",
+			ja: null,
 			en: "Cancel",
-			tw: "取消",
-			ko: "취소"
+			tw: "取消"
 		},
 		save: {
-			ja: "保存する",
+			ja: null,
 			en: "Save",
-			tw: "儲存",
-			ko: "저장"
+			tw: "儲存"
 		},
 		displayName: {
-			ja: "表示名",
+			ja: null,
 			en: "Displayed Name",
-			ko: "닉네임"
 		},
 		customdon: {
 			bodyFill: {
-				ja: "どう",
+				ja: null,
 				en: "Body",
-				tw: "身體",
-				ko: "몸"
+				tw: "身體"
 			},
 			faceFill: {
-				ja: "かお",
+				ja: null,
 				en: "Face",
-				tw: "臉",
-				ko: "얼굴"
+				tw: "臉"
 			},
 			reset: {
-				ja: "リセット",
+				ja: null,
 				en: "Reset",
-				tw: "重設",
-				ko: "초기화"
+				tw: "重設"
 			}
 		},
 		changePassword: {
-			ja: "パスワードの変更",
+			ja: null,
 			en: "Change Password",
-			tw: "更改密碼",
-			ko: "비밀번호 변경"
+			tw: "更改密碼"
 		},
 		currentNewRepeat: {
-			ja: [
-				"現在のパスワード",
-				"新しいパスワード",
-				"新しいパスワードの繰り返し"
-			],
+			ja: null,
 			en: [
 				"Current Password",
 				"New Password",
@@ -1105,118 +1359,101 @@ var translations = {
 				"目前密碼",
 				"新密碼",
 				"重複新密碼"
-			],
-			ko: [
-				"현재 비밀번호",
-				"새 비밀번호",
-				"새 비밀번호 재입력"
-			],
+			]
 		},
 		deleteAccount: {
-			ja: "アカウント削除",
+			ja: null,
 			en: "Delete Account",
-			tw: "刪除帳號",
-			ko: "계정 삭제"
+			tw: "刪除帳號"
+		},
+		forgetPass: {
+			ja: null,
+			en: "Forget Password",
+			tw: "忘記密碼"
 		},
 		verifyPassword: {
-			ja: "削除するパスワードの確認",
+			ja: null,
 			en: "Verify password to delete this account",
-			tw: "請確認您的密碼以刪除帳號",
-			ko: "계정을 삭제하기 위해 비밀번호를 인증해주세요"
+			tw: "請確認您的密碼以刪除帳號"
 		}
 	},
 	serverError: {
 		not_logged_in: {
-			ja: "ログインしていない",
+			ja: null,
 			en: "Not logged in",
-			tw: "未登入",
-			ko: "로그인되지 않음"
+			tw: "未登入"
 		},
 		invalid_username: {
-			ja: "ユーザー名が無効です。ユーザー名には、文字、数字、アンダースコアのみを使用でき、3文字以上20文字以下である必要があります。",
+			ja: null,
 			en: "Invalid username, a username can only contain letters, numbers, and underscores, and must be between 3 and 20 characters long",
-			tw: "使用者名稱無效，使用者名稱只能由字母、數字、及底線組成，且長度必須介於 3 到 20 個字之間",
-			ko: "유효하지 않은 아이디. 아이디에는 글자, 숫자, 밑줄만 들어갈 수 있으며, 길이는 3자와 20자 사이여야 합니다."
+			tw: "使用者名稱無效，使用者名稱只能由字母、數字、及底線組成，且長度必須介於 3 到 20 個字之間"
 		},
 		username_in_use: {
-			ja: "そのユーザ名で既にユーザが存在する",
+			ja: null,
 			en: "A user already exists with that username",
-			tw: "已有一位相同名稱的使用者",
-			ko: "해당 아이디는 이미 다른 계정에서 사용하고 있습니다."
+			tw: "已有一位相同名稱的使用者"
 		},
 		invalid_password: {
-			ja: "このパスワードは使用できません。パスワードの長さが6文字以上であることを確認してください",
+			ja: null,
 			en: "Cannot use this password, please check that your password is at least 6 characters long",
-			tw: "無法使用此密碼，密碼長度至少要 6 個字。",
-			ko: "해당 비밀번호를 사용할 수 없습니다. 비밀번호가 6자 이상인지 확인하시기 바랍니다."
+			tw: "無法使用此密碼，密碼長度至少要 6 個字。"
 		},
 		invalid_username_password: {
-			ja: "ユーザー名またはパスワードが無効",
+			ja: null,
 			en: "Invalid Username or Password",
-			tw: "無效的使用者名稱或密碼",
-			ko: "잘못된 아이디 혹은 비밀번호"
+			tw: "無效的使用者名稱或密碼"
 		},
 		invalid_display_name: {
-			ja: "この名前は使用できません。新しい名前が25文字以下であることを確認してください",
+			ja: null,
 			en: "Cannot use this name, please check that your new name is at most 25 characters long",
-			tw: "無法使用此名稱。名稱最多不能超過 25 個字。",
-			ko: "해당 닉네임을 사용할 수 없습니다. 닉네임의 길이가 25자 미만인지 확인하시기 바랍니다."
+			tw: "無法使用此名稱。名稱最多不能超過 25 個字。"
 		},
 		invalid_don: {
-			ja: "マイどんを保存できませんでした",
+			ja: null,
 			en: "Could not save your custom Don",
-			tw: "無法儲存小咚",
-			ko: "커스텀 동이를 저장할 수 없습니다"
+			tw: "無法儲存小咚"
 		},
 		current_password_invalid: {
-			ja: "現在のパスワードが一致しません",
+			ja: null,
 			en: "Current password does not match",
-			tw: "目前密碼不符合",
-			ko: "기존 비밀번호가 틀립니다."
+			tw: "目前密碼不符合"
 		},
 		invalid_new_password: {
-			ja: "このパスワードは使用できません。新しいパスワードが6文字以上であることを確認してください",
+			ja: null,
 			en: "Cannot use this password, please check that your new password is at least 6 characters long",
-			tw: "無法使用此密碼，您的新密碼長度至少要 6 個字",
-			ko: "해당 비밀번호를 사용할 수 없습니다. 비밀번호가 6자 이상인지 확인해주시기 바랍니다."
+			tw: "無法使用此密碼，您的新密碼長度至少要 6 個字"
 		},
 		verify_password_invalid: {
-			ja: "確認用パスワードが一致しない",
+			ja: null,
 			en: "Verification password does not match",
-			tw: "確認密碼不符合",
-			ko: "비밀번호가 일치하지 않습니다."
+			tw: "確認密碼不符合"
 		},
 		invalid_csrf: {
-			ja: "セキュリティトークンの期限が切れました。ページを更新してください。",
+			ja: null,
 			en: "Security token expired. Please refresh the page.",
-			tw: "安全權杖過期。請重新載入頁面。",
-			ko: "보안 토큰이 만료되었습니다. 페이지를 새로고침해주세요."
+			tw: "安全權杖過期。請重新載入頁面。"
 		}
 	},
 	browserSupport: {
 		browserWarning: {
 			ja: "サポートされていないブラウザを実行しています (%s)",
 			en: "You are running an unsupported browser (%s)",
-			tw: "您正在使用不支援的瀏覽器 (%s)",
-			ko: "호환되지 않는 브라우저입니다. (%s)"
+			tw: "您正在使用不支援的瀏覽器 (%s)"
 		},
 		details: {
 			ja: "詳しく",
 			en: "Details...",
-			tw: "詳細資料",
-			ko: "세부 사항"
+			tw: "詳細資料"
 		},
 		failedTests: {
 			ja: "このテストは失敗しました：",
 			en: "The following tests have failed:",
-			tw: "以下的測試未通過：",
-			ko: "다음 테스트에서 실패했습니다:"
+			tw: "以下的測試未通過："
 		},
 		supportedBrowser: {
 			ja: "%sなどのサポートされているブラウザを使用してください",
 			en: "Please use a supported browser such as %s",
-			tw: "請使用支援的瀏覽器，例如：%s",
-			ko: "%s 등의 호환되는 브라우저를 사용해주시기 바랍니다"
+			tw: "請使用支援的瀏覽器，例如：%s"
 		}
 	},
 	creative: {
@@ -1242,6 +1479,78 @@ var translations = {
 		tw: "帶歌詞",
 		ko: "가사 포함됨"
 	},
+	songMods: {
+		x2: {
+			ja: "ばいそく",
+			en: "x2",
+			cn: "二倍速",
+			tw: "二倍速",
+			kr: "배속"
+		},
+		x3: {
+			ja: "さんばい",
+			en: "x3",
+			cn: "三倍速",
+			tw: "三倍速",
+			kr: "세배"
+		},
+		x4: {
+			ja: "よんばい",
+			en: "x4",
+			cn: "四倍速",
+			tw: "四倍速",
+			kr: "네배"
+		},
+		reverse: {
+			ja: "あべこべ",
+			en: "Inverse",
+			cn: "颠倒",
+			tw: "顛倒",
+			kr: "역전"
+		},
+		half_shuffle: {
+			ja: "きまぐれ",
+			en: "Whimsical",
+			cn: "随兴",
+			tw: "小亂",
+			kr: "변덕"
+		},
+		shuffle: {
+			ja: "でたらめ",
+			en: "Messy",
+			cn: "随意",
+			tw: "大亂",
+			kr: "대충"
+		},
+		doron: {
+			ja: "ドロン",
+			en: "Vanish",
+			cn: "隐身",
+			tw: "隱譜",
+			kr: "은신"
+		},
+		hardcore: {
+			ja: "ハードコア",
+			en: "Hardcore",
+			cn: "硬核",
+			tw: "非良即不可",
+			kr: "Hardcore"
+		},
+		allDon: {
+			ja: "ドン(記録されていません)",
+			en: "Don(Score not recorded)",
+			cn: "咚(不紀錄成績)",
+			tw: "咚(不紀錄成績)",
+			kr: "Don(Score not recorded)"
+		},
+		allKat: {
+			ja: "カッ(記録されていません)",
+			en: "Kat(Score not recorded)",
+			cn: "咔(不紀錄成績)",
+			tw: "咔(不紀錄成績)",
+			kr: "Kat(Score not recorded)"
+		}
+	},
 	customSongs: {
 		title: {
 			ja: "カスタム曲リスト",
@@ -1258,9 +1567,6 @@ var translations = {
 			ko: "기본 노래 목록"
 		},
 		description: {
-			ja: [
-				"TJA形式の太鼓譜面ファイルが入ったフォルダを選んで、カスタム曲リストで演奏しよう!"
-			],
 			en: [
 				"Pick a folder with Taiko chart files in TJA format to play on a custom song list!"
 			],
@@ -1270,9 +1576,6 @@ var translations = {
 			tw: [
 				"請選擇包含太鼓譜面檔案 (TJA格式) 的資料夾，即可在自訂歌單中遊玩。"
 			],
-			ko: [
-				"TJA 확장자로 되어 있는 채보가 포함되어 있는 폴더를 골라 커스텀 곡을 플레이하세요!"
-			]
 		},
 		localFolder: {
 			ja: "ローカルフォルダ...",
@@ -1303,16 +1606,12 @@ var translations = {
 			ko: "파일을 여기에 드롭하세요"
 		},
 		importError: {
-			ja: "インポートエラー",
 			en: "Import Error",
-			tw: "匯入失敗",
-			ko: "불러오기 오류"
+			tw: "匯入失敗"
 		},
 		noSongs: {
-			ja: "提供されたフォルダーに太鼓譜面ファイルは見つかりませんでした。",
 			en: "No Taiko chart files have been found in the provided folder.",
-			tw: "在你選擇的資料夾中找不到譜面檔案。",
-			ko: "해당 폴더에서 채보 파일을 찾을 수 없습니다."
+			tw: "在你選擇的資料夾中找不到譜面檔案。"
 		}
 	},
 	gpicker: {
@@ -1345,33 +1644,27 @@ var translations = {
 			ko: "공유 문서함"
 		},
 		authError: {
-			ja: "認証エラー: %s",
 			en: "Auth error: %s",
-			tw: "驗證錯誤：%s",
-			ko: "인증 오류: %s"
+			tw: "驗證錯誤：%s"
 		},
 		cookieError: {
 			ja: "この機能には、サードパーティのクッキーが必要です。",
 			en: "This function requires third party cookies.",
-			tw: "此功能需要第三方 cookies。",
-			ko: "이 기능은 제3자 쿠키가 허용되어야 합니다."
+			tw: "此功能需要第三方 cookies。"
 		}
 	},
 	plugins: {
 		title: {
 			ja: "プラグイン",
-			en: "Plugins",
-			ko: "플러그인"
+			en: "Plugins"
 		},
 		unloadAll: {
 			ja: "すべて無効にする",
-			en: "Unload All",
-			ko: "모두 해제"
+			en: "Unload All"
 		},
 		warning: {
 			ja: "%sを読み込もうとしています。プラグインは信頼できる場合のみ読み込むようにしてください。続行しますか？",
-			en: "You are about to load %s. Plugins should only be loaded if you trust them. Continue?",
-			ko: "%s을 로드하려고 합니다. 신뢰할 수 있는 플러그인만 로드하시기 바랍니다. 계속할까요?"
+			en: "You are about to load %s. Plugins should only be loaded if you trust them. Continue?"
 		},
 		plugin: {
 			ja: {
@@ -1381,55 +1674,33 @@ var translations = {
 			en: {
 				one: "%s plugin",
 				other: "%s plugins"
-			},
-			ko: {
-				one: "%s 플러그인",
-				other: "%s 플러그인들"
 			}
 		},
 		author: {
 			ja: "作成者：%s",
-			en: "By %s",
-			ko: "제작자:%s"
+			en: "By %s"
 		},
 		version: {
 			ja: "Ver. %s",
-			en: "Version %s",
-			ko: "버전 %s"
-		},
-		browse: {
-			ja: "参照する…",
-			en: "Browse...",
-			cn: "浏览…",
-			tw: "開啟檔案…",
-			ko: "찾아보기…"
-		},
-		noPlugins: {
-			ja: null,
-			en: "No .taikoweb.js plugin files have been found in the provided file list.",
-			ko: "주어진 파일 리스트에서 .taikoweb.js 플러그인 파일들을 발견할 수 없습니다."
+			en: "Version %s"
 		}
 	},
 	search: {
 		search: {
 			ja: "曲を検索",
-			en: "Search Songs",
-			ko: "노래 검색"
+			en: "Search Songs"
 		},
 		searchInput: {
 			ja: "曲を検索...",
-			en: "Search for songs...",
-			ko: "곡 검색..."
+			en: "Search for songs..."
 		},
 		noResults: {
 			ja: "結果は見つかりませんでした。",
-			en: "No results found.",
-			ko: "결과 없음"
+			en: "No results found."
 		},
 		tip: {
 			ja: "ヒント：",
-			en: "Tip:",
-			ko: "팁:"
+			en: "Tip:"
 		},
 		tips: {
 			ja: [
@@ -1455,18 +1726,6 @@ var translations = {
 				"Find songs with lyrics enabled with the \"lyrics:yes\" filter!",
 				"Feel like trying something new? Use the \"played:no\" filter to only see songs you haven't played yet!",
 				"Looking for creative courses from a specific creator? Use the \"maker:<name>\" filter!"
-			],
-			ko: [
-				"CTRL+F를 눌러 검색 창을 여세요!",
-				"자유롭게 필터를 조합해 검색하세요!",
-				"\"genre:\" 키워드로 원하는 장르의 곡만 찾아보세요! (예시: \"genre:variety\", \"genre:namco\")",
-				"\"oni:10\" 같은 키워드로 원하는 난이도를 가진 곡을 찾아보세요!",
-				"\"ura:1-5\" 같은 키워드로 여러 난이도를 선택할 수 있어요!",
-				"풀 콤보한 곡을 찾아보고 싶나요? \"gold:any\", \"gold:oni\" 등의 키워드로 검색할 수 있습니다!",
-				"창작 채보 곡들을 검색하고 싶나요? \"creative:yes\" 키워드를 사용하세요!",
-				"\"lyrics:yes\" 키워드로 가사가 있는 곡들을 선택할 수 있어요!",
-				"새로운 곡들을 플레이해보고 싶나요? \"played:no\" 키워드로 아직 플레이하지 않은 곡들만을 볼 수 있어요!",
-				"특정 창작자가 만든 채보를 검색하고 싶으신가요? \"maker:<창작자 이름>\" 키워드를 사용하세요!"
 			]
 		}
 	}

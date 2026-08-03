@@ -20,12 +20,14 @@ class Game{
 			maxCombo: 0,
 			drumroll: 0,
 			gauge: 0,
+			adlib: 0,
+			adlibTotal: 0,
 			title: selectedSong.title,
 			difficulty: this.rules.difficulty
 		}
 		var combo = this.songData.circles.filter(circle => {
 			var type = circle.type
-			return (type === "don" || type === "ka" || type === "daiDon" || type === "daiKa") && (!circle.branch || circle.branch.active)
+			return (type === "don" || type === "ka" || type === "daiDon" || type === "daiKa" || type === "green") && (!circle.branch || circle.branch.active)
 		}).length
 		this.soulPoints = this.rules.soulPoints(combo)
 		this.paused = false
@@ -172,49 +174,36 @@ class Game{
 				var measure = measures[i]
 				if(measure.ms > ms){
 					break
-				}else{
-					if(measure.nextBranch && !measure.gameChecked){
-						measure.gameChecked = true
-						var branch = measure.nextBranch
-						if(branch.type){
-							var accuracy = 0
-							if(branch.type === "drumroll"){
-								if(force.branch){
-									var accuracy = Math.max(0, branch.requirement[force.branch])
-								}else{
-									var accuracy = this.sectionDrumroll
-								}
-							}else if(this.sectionNotes.length !== 0){
-								if(force.branch){
-									var accuracy = Math.max(0, Math.min(100, branch.requirement[force.branch]))
-								}else{
-									var accuracy = this.sectionNotes.reduce((a, b) => a + b) / this.sectionNotes.length * 100
-								}
-							}
-							if(accuracy >= branch.requirement.master){
-								this.setBranch(branch, "master")
-							}else if(accuracy >= branch.requirement.advanced){
-								this.setBranch(branch, "advanced")
+				}else if(measure.nextBranch && !measure.gameChecked){
+					measure.gameChecked = true
+					var branch = measure.nextBranch
+					if(branch.type){
+						var accuracy = 0
+						if(branch.type === "drumroll"){
+							if(force.branch){
+								var accuracy = Math.max(0, branch.requirement[force.branch])
 							}else{
-								this.setBranch(branch, "normal")
+								var accuracy = this.sectionDrumroll
 							}
-						}else if(this.controller.multiplayer === 1){
-							p2.send("branch", "normal")
+						}else if(this.sectionNotes.length !== 0){
+							if(force.branch){
+								var accuracy = Math.max(0, Math.min(100, branch.requirement[force.branch]))
+							}else{
+								var accuracy = this.sectionNotes.reduce((a, b) => a + b) / this.sectionNotes.length * 100
+							}
 						}
-					}
-					if(this.controller.lyrics){
-						if(!measure.branch){
-							this.controller.lyrics.branch = null
-						}else if(measure.branch.active){
-							this.controller.lyrics.branch = measure.branch.name
+						if(accuracy >= branch.requirement.master){
+							this.setBranch(branch, "master")
+						}else if(accuracy >= branch.requirement.advanced){
+							this.setBranch(branch, "advanced")
+						}else{
+							this.setBranch(branch, "normal")
 						}
+					}else if(this.controller.multiplayer === 1){
+						p2.send("branch", "normal")
 					}
 				}
 			}
-		}
-		
-		if(this.controller.lyrics){
-			this.controller.lyrics.update(ms)
 		}
 	}
 	fixNoteStream(keysDon){
@@ -253,10 +242,23 @@ class Game{
 			this.resetSection()
 		}
 		circle.played(-1, circle.type === "daiDon" || circle.type === "daiKa")
-		this.sectionNotes.push(0)
-		this.controller.displayScore(0, true)
-		this.updateCombo(0)
-		this.updateGlobalScore(0, 1)
+		if(circle.type !== "adlib"){
+			this.sectionNotes.push(0)
+			this.controller.displayScore(0, true)
+			this.updateCombo(0)
+			this.updateGlobalScore(0, 1)
+		}else{
+			this.countAdlib(circle)
+		}
+		if(circle.type === "green"){
+			var keys = this.controller.getKeys()
+			var drumKeys = ["don_l", "don_r", "ka_l", "ka_r"]
+			drumKeys.forEach(key => {
+				if(keys[key]){
+					this.controller.waitForKeyup(key, "score")
+				}
+			})
+		}
 		if(this.controller.multiplayer === 1){
 			p2.send("note", {
 				score: -1
@@ -299,7 +301,9 @@ class Game{
 			}
 		}
 		var keyTime = this.controller.getKeyTime()
-		if(keyTime["don"] >= keyTime["ka"]){
+		if((don_l || don_r) && (ka_l || ka_r)){
+			this.checkKey(["don_l", "don_r", "ka_l", "ka_r"], circle, "green")
+		}else if(keyTime["don"] >= keyTime["ka"]){
 			checkDon()
 			checkKa()
 		}else{
@@ -324,13 +328,23 @@ class Game{
 		var keysDon = check === "don" || check === "daiDon"
 		var keysKa = check === "ka" || check === "daiKa"
 		var keyDai = check === "daiDon" || check === "daiKa"
-		var typeDon = type === "don" || type === "daiDon"
-		var typeKa = type === "ka" || type === "daiKa"
-		var typeDai = type === "daiDon" || type === "daiKa"
-		
+		var keyGreen = check === "green"
 		var keyTime = this.controller.getKeyTime()
-		var currentTime = circle.daiFailed ? circle.daiFailed.ms : keysDon ? keyTime["don"] : keyTime["ka"]
+		var keyTimeRelative = Math.abs(keyTime.don - keyTime.ka)
+		var greenDonRelative = keyTime["don"] - circle.ms - this.controller.audioLatency
+		var greenKaRelative = keyTime["ka"] - circle.ms - this.controller.audioLatency
+		var greenInput = keyGreen && keyTimeRelative <= 50 && Math.abs(greenDonRelative) < this.rules.bad && Math.abs(greenKaRelative) < this.rules.bad
+		var typeDon = type === "don" || type === "daiDon" || type === "adlib"
+		var typeKa = type === "ka" || type === "daiKa" || type === "adlib"
+		var typeDai = type === "daiDon" || type === "daiKa" || type === "green"
+		var typeAdlib = type === "adlib"
+		var typeGreen = type === "green"
+
+		var currentTime = circle.daiFailed ? circle.daiFailed.ms : keyGreen ? Math.max(keyTime["don"], keyTime["ka"]) : keysDon ? keyTime["don"] : keyTime["ka"]
 		var relative = currentTime - circle.ms - this.controller.audioLatency
+		if(typeGreen && greenInput){
+			relative = Math.max(Math.abs(greenDonRelative), Math.abs(greenKaRelative))
+		}
 		
 		if(relative >= this.rules.ok){
 			var fixedNote = this.fixNoteStream(keysDon)
@@ -339,23 +353,23 @@ class Game{
 			}
 		}
 		
-		if(typeDon || typeKa){
+		if(typeDon || typeKa || typeGreen){
 			if(-this.rules.bad >= relative || relative >= this.rules.bad){
 				return true
 			}
 			var score = 0
-			if(keysDon && typeDon || keysKa && typeKa){
+			if(keysDon && typeDon || keysKa && typeKa || typeGreen && greenInput){
 				var circleStatus = -1
 				relative = Math.abs(relative)
 				if(relative < this.rules.good){
 					circleStatus = 450
-				}else if(relative < this.rules.ok){
+				}else if(!this.controller.mods.hardcore && relative < this.rules.ok){
 					circleStatus = 230
 				}else if(relative < this.rules.bad){
 					circleStatus = 0
 				}
-				if(typeDai && !keyDai){
-					if(this.controller.easierBigNotes){
+				if(typeGreen ? !greenInput : (typeDai && !keyDai)){
+					if(this.controller.easierBigNotes && !typeGreen){
 						// Taiko Force Lv5 can't hit both Dons at the same time, so dai offered
 						keyDai = true
 					}else if(!circle.daiFailed){
@@ -367,6 +381,8 @@ class Game{
 						return false
 					}else if(ms < circle.daiFailed.ms + this.rules.daiLeniency){
 						return false
+					}else if(typeGreen){
+						return true
 					}else{
 						circleStatus = circle.daiFailed.status
 					}
@@ -374,19 +390,31 @@ class Game{
 				if(circleStatus === 230 || circleStatus === 450){
 					score = circleStatus
 				}
-				circle.played(score, score === 0 ? typeDai : keyDai)
-				this.controller.displayScore(score, false, typeDai && keyDai)
+				circle.played(score, score === 0 ? typeDai : (keyDai || typeGreen))
+				if(typeAdlib){
+					this.countAdlib(circle)
+				}
+				if(!typeAdlib || score){
+					this.controller.displayScore(score, false, typeDai && keyDai || typeGreen, typeAdlib)
+				}
+			}else if(typeGreen){
+				return false
 			}else{
-				var keyTime = this.controller.getKeyTime()
-				var keyTimeRelative = Math.abs(keyTime.don - keyTime.ka)
 				if(Math.abs(relative) >= (keyTimeRelative <= 25 ? this.rules.bad : this.rules.good)){
 					return true
 				}
 				circle.played(-1, typeDai)
 				this.controller.displayScore(score, true, false)
 			}
-			this.updateCombo(score)
-			this.updateGlobalScore(score, typeDai && keyDai ? 2 : 1, circle.gogoTime)
+			if(!typeAdlib || score){
+				this.updateCombo(score)
+				var doubleScore = typeDai && keyDai || typeGreen
+				this.updateGlobalScore(score, doubleScore ? 2 : 1, circle.gogoTime)
+				this.sectionNotes.push(score === 450 ? 1 : (score === 230 ? 0.5 : 0))
+			}
+			if(typeAdlib && score){
+				this.globalScore.adlib++
+			}
 			this.updateCurrentCircle()
 			if(circle.section){
 				this.resetSection()
@@ -396,7 +424,7 @@ class Game{
 				var value = {
 					score: score,
 					ms: circle.ms - currentTime - this.controller.audioLatency,
-					dai: typeDai ? (keyDai ? 2 : 1) : 0
+					dai: typeDai ? (keyDai ? 2 : 1) : (typeGreen ? 2 : 0)
 				}
 				if((!keysDon || !typeDon) && (!keysKa || !typeKa)){
 					value.reverse = true
@@ -407,34 +435,46 @@ class Game{
 			if(circle.ms + this.controller.audioLatency > currentTime || currentTime > circle.endTime + this.controller.audioLatency){
 				return true
 			}
-			if(keysDon && type === "balloon"){
+			if((keysDon || keyGreen) && type === "balloon"){
 				this.checkBalloon(circle)
 				if(check === "daiDon" && !circle.isPlayed){
 					this.checkBalloon(circle)
 				}
-			}else if((keysDon || keysKa) && (type === "drumroll" || type === "daiDrumroll")){
+			}else if((keysDon || keysKa || keyGreen) && (type === "drumroll" || type === "daiDrumroll")){
 				this.checkDrumroll(circle, keysKa)
-				if(keyDai){
-					this.checkDrumroll(circle, keysKa)
+				if(keyDai || keyGreen){
+					this.checkDrumroll(circle, keysKa || keyGreen)
 				}
 			}
+			}
+			return true
 		}
-		return true
-	}
-	checkBalloon(circle){
+		countAdlib(circle){
+			if(circle.type === "adlib" && !circle.adlibTotalCounted){
+				circle.adlibTotalCounted = true
+				this.globalScore.adlibTotal++
+			}
+		}
+		checkBalloon(circle){
+		var ms = this.elapsedTime
+		var popped = false
 		if(circle.timesHit >= circle.requiredHits - 1){
 			var score = 5000
 			this.updateCurrentCircle()
 			circle.hit()
 			circle.played(score)
+			popped = true
 			if(this.controller.multiplayer == 1){
 				p2.send("drumroll", {
-					pace: (this.elapsedTime - circle.ms + this.controller.audioLatency) / circle.timesHit
+					pace: (ms - circle.ms + this.controller.audioLatency) / circle.timesHit
 				})
 			}
 		}else{
 			var score = 300
 			circle.hit()
+		}
+		if(this.view && this.view.showBalloonCounter){
+			this.view.showBalloonCounter(circle, circle.timesHit, ms, popped)
 		}
 		this.globalScore.drumroll++
 		this.sectionDrumroll++
@@ -449,6 +489,9 @@ class Game{
 			this.resetSection()
 		}
 		circle.hit(keysKa)
+		if(this.view && this.view.showDrumrollCounter){
+			this.view.showDrumrollCounter(circle, circle.timesHit, ms)
+		}
 		var keyTime = this.controller.getKeyTime()
 		if(circle.type === "drumroll"){
 			var sound = keyTime["don"] > keyTime["ka"] ? "don" : "ka"
@@ -465,6 +508,7 @@ class Game{
 			fixedPos: document.hasFocus()
 		})
 		circleAnim.played(score, dai)
+		circleAnim.isRoll = true
 		circleAnim.animate(ms)
 		this.view.drumroll.push(circleAnim)
 		this.globalScore.drumroll++
@@ -545,6 +589,7 @@ class Game{
 			}else if(this.controller.multiplayer !== 2 && this.mainAsset){
 				this.mainAsset.play((ms < 0 ? -ms : 0) / 1000, false, Math.max(0, ms / 1000))
 			}
+			this.mainMusicPlaying = true
 			// 同步启动背景视频
 			if(window.videoElement) {
 				var videoStartTime = Math.max(0, ms / 1000)
@@ -552,7 +597,6 @@ class Game{
 				window.videoElement.style.display = "block"
 				window.videoElement.play()
 			}
-			this.mainMusicPlaying = true
 		}
 	}
 	togglePause(forcePause, pauseMove, noSound){
@@ -564,9 +608,9 @@ class Game{
 				this.controller.playSound("se_pause", 0, true)
 			}
 			this.paused = true
-			  if(window.videoElement) {
-            window.videoElement.pause();
-}
+			if(window.videoElement) {
+				window.videoElement.pause();
+			}
 			this.latestDate = Date.now()
 			if(this.mainAsset){
 				this.mainAsset.stop()
@@ -589,10 +633,9 @@ class Game{
 				this.controller.playSound("se_cancel", 0, true)
 			}
 			this.paused = false
-			  if(window.videoElement) {
-            window.videoElement.play();
-
-    }
+			if(window.videoElement) {
+				window.videoElement.play();
+			}
 			var currentDate = Date.now()
 			this.startDate += currentDate - this.latestDate
 			this.sndTime = currentDate - snd.buffer.getTime() * 1000
@@ -648,6 +691,8 @@ class Game{
 	updateCombo(score){
 		if(score !== 0){
 			this.combo++
+		}else if(score === -1){
+			this.combo = 0
 		}else{
 			this.combo = 0
 		}

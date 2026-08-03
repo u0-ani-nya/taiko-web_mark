@@ -58,6 +58,12 @@ class SongSelect{
 				border: ["#dec4fd", "#a543ef"],
 				outline: "#a741ef"
 			},
+			"songSuggest": {
+				sort: 0,
+				background: "#afeeee",
+				border: ["#c6dfff", "#4485d9"],
+				outline: "#2390d9"
+			},
 			"customSongs": {
 				sort: 0,
 				background: "#fab5d3",
@@ -86,22 +92,32 @@ class SongSelect{
 				if(category.songSkin.sort === null){
 					category.songSkin.sort = songSkinLength + 1
 				}
-				category.songSkin.id = category.id
 				this.songSkin[category.title] = category.songSkin
 			}
 		}
 		this.songSkin["default"].sort = songSkinLength + 1
 		
+		this.searchStyle = document.createElement("style")
+		var searchCss = []
+		Object.keys(this.songSkin).forEach(key => {
+			var skin = this.songSkin[key]
+			if("id" in skin || key === "default"){
+				var id = "id" in skin ? ("cat" + skin.id) : key
+
+				searchCss.push('.song-search-' + id + ' { background-color: ' + skin.background + ' }')
+				searchCss.push('.song-search-' + id + '::before { border: 0.4em solid ' + skin.border[0] + ' ; border-bottom-color: ' + skin.border[1] + ' ; border-right-color: ' + skin.border[1] + ' }')
+				searchCss.push('.song-search-' + id + ' .song-search-result-title::before { -webkit-text-stroke: 0.4em ' + skin.outline + ' }')
+				searchCss.push('.song-search-' + id + ' .song-search-result-subtitle::before { -webkit-text-stroke: 0.4em ' + skin.outline + ' }')
+			}
+		})
+		this.searchStyle.appendChild(document.createTextNode(searchCss.join("\n")))
+		loader.screen.appendChild(this.searchStyle)
+
 		this.font = strings.font
 		
-		this.search = new Search(this)
-
 		this.songs = []
 		for(let song of assets.songs){
-			var title = this.getLocalTitle(song.title, song.title_lang)
-			song.titlePrepared = title ? fuzzysort.prepare(this.search.normalizeString(title)) : null
-			var subtitle = this.getLocalTitle(title === song.title ? song.subtitle : "", song.subtitle_lang)
-			song.subtitlePrepared = subtitle ? fuzzysort.prepare(this.search.normalizeString(subtitle)) : null
+			this.updateSongSearchText(song)
 			this.songs.push(this.addSong(song))
 		}
 		this.songs.sort((a, b) => {
@@ -118,26 +134,30 @@ class SongSelect{
 			}
 		})
 		if(assets.songs.length){
-			this.songs.push({
-				title: strings.back,
-				skin: this.songSkin.back,
-				action: "back"
-			})
+			// this.songs.push({
+			// 	title: strings.back,
+			// 	skin: this.songSkin.back,
+			// 	action: "back"
+			// })
 			this.songs.push({
 				title: strings.randomSong,
 				skin: this.songSkin.random,
 				action: "random",
-				category: strings.random,
-				canJump: true,
-				p2Enabled: true
+				category: strings.randomSong,
+				canJump: true
 			})
 			this.songs.push({
 				title: strings.search.search,
 				skin: this.songSkin.search,
 				action: "search",
-				category: strings.random,
-				p2Enabled: true
+				category: strings.search.search,
 			})
+			// this.songs.push({
+			// 	title: strings.songSuggest,
+			// 	skin: this.songSkin.songSuggest,
+			// 	action: "songSuggest",
+			// 	category: strings.songSuggest
+			// })
 		}
 		if(touchEnabled){
 			if(fromTutorial === "tutorial"){
@@ -148,7 +168,7 @@ class SongSelect{
 				title: strings.howToPlay,
 				skin: this.songSkin.tutorial,
 				action: "tutorial",
-				category: strings.random
+				category: strings.howToPlay
 			})
 		}
 		this.showWarning = showWarning
@@ -159,13 +179,13 @@ class SongSelect{
 			title: strings.aboutSimulator,
 			skin: this.songSkin.about,
 			action: "about",
-			category: strings.random
+			category: strings.aboutSimulator
 		})
 		this.songs.push({
 			title: strings.gameSettings,
 			skin: this.songSkin.settings,
 			action: "settings",
-			category: strings.random
+			category: strings.gameSettings
 		})
 		
 		var showCustom = false
@@ -179,21 +199,22 @@ class SongSelect{
 				title: assets.customSongs ? strings.customSongs.default : strings.customSongs.title,
 				skin: this.songSkin.customSongs,
 				action: "customSongs",
-				category: strings.random
+				category: assets.customSongs ? strings.customSongs.default : strings.customSongs.title
 			})
 		}
-		this.songs.push({
-			title: strings.plugins.title,
-			skin: this.songSkin.plugins,
-			action: "plugins",
-			category: strings.random
-		})
-		
-		this.songs.push({
-			title: strings.back,
-			skin: this.songSkin.back,
-			action: "back"
-		})
+		if(plugins.hasSettings()){
+			this.songs.push({
+				title: strings.plugins.title,
+				skin: this.songSkin.plugins,
+				action: "plugins",
+				category: strings.plugins.title
+			})
+		}
+		// this.songs.push({
+		// 	title: strings.back,
+		// 	skin: this.songSkin.back,
+		// 	action: "back"
+		// })
 		
 		this.songAsset = {
 			marginTop: 104,
@@ -220,9 +241,17 @@ class SongSelect{
 			iconName: "options",
 			iconFill: "#d9f19f",
 			letterSpacing: 0
+		},
+		{
+			text: strings.soundOptions,
+			fill: "#ff99b2",
+			iconName: "sounds",
+			iconFill: "#ffccd8",
+			letterSpacing: -4
 		}]
-		this.optionsList = [strings.none, strings.auto, strings.netplay]
-		
+		this.optionsList = [strings.none, strings.auto, strings.netplay, strings.songMods.x2, strings.songMods.x3, strings.songMods.x4,strings.songMods.doron, strings.songMods.reverse, strings.songMods.half_shuffle, strings.songMods.shuffle, strings.songMods.hardcore, strings.songMods.allDon, strings.songMods.allKat]
+		this.optionRows = this.getOptionRows()
+		this.soundList = [strings.taikoS, strings.testS, strings.s3, strings.s4, strings.s5, strings.s6, strings.s7, strings.s8, strings.s9, strings.s10, strings.s11, strings.s12, strings.s13, strings.s14, strings.s15, strings.s16, strings.s17, strings.s18, strings.s19, strings.s20, strings.s21, strings.s22, strings.s23, strings.s24, strings.s25, strings.s26, strings.s27, strings.s28]
 		this.draw = new CanvasDraw(noSmoothing)
 		this.songTitleCache = new CanvasCache(noSmoothing)
 		this.selectTextCache = new CanvasCache(noSmoothing)
@@ -231,7 +260,6 @@ class SongSelect{
 		this.sessionCache = new CanvasCache(noSmoothing)
 		this.currentSongCache = new CanvasCache(noSmoothing)
 		this.nameplateCache = new CanvasCache(noSmoothing)
-		
 		
 		this.difficulty = [strings.easy, strings.normal, strings.hard, strings.oni]
 		this.difficultyId = ["easy", "normal", "hard", "oni", "ura"]
@@ -243,8 +271,8 @@ class SongSelect{
 		
 		this.selectedSong = 0
 		this.selectedDiff = 0
+		this.selectedSound = 0
 		this.lastCurrentSong = {}
-		this.lastRandom = false
 		assets.sounds["bgm_songsel"].playLoop(0.1, false, 0, 1.442, 3.506)
 		
 		if(!assets.customSongs && !fromTutorial && !("selectedSong" in localStorage) && !songId){
@@ -263,7 +291,7 @@ class SongSelect{
 			newSelected = this.songs.findIndex(song => song.action === fromTutorial)
 		}
 		if(newSelected !== -1){
-			this.setSelectedSong(newSelected, false)
+			this.selectedSong = newSelected
 			this.playBgm(true)
 		}else{
 			if(songId){
@@ -273,11 +301,11 @@ class SongSelect{
 				}
 			}
 			if(songIdIndex !== -1){
-				this.setSelectedSong(songIdIndex, false)
+				this.selectedSong = songIdIndex
 			}else if(assets.customSongs){
-				this.setSelectedSong(Math.min(Math.max(0, assets.customSelected), this.songs.length - 1), false)
+				this.selectedSong = Math.min(Math.max(0, assets.customSelected), this.songs.length - 1)
 			}else if((!p2.session || fadeIn) && "selectedSong" in localStorage){
-				this.setSelectedSong(Math.min(Math.max(0, localStorage["selectedSong"] |0), this.songs.length - 1), false)
+				this.selectedSong = Math.min(Math.max(0, localStorage["selectedSong"] |0), this.songs.length - 1)
 			}
 			if(!this.showWarning){
 				this.playSound(songIdIndex !== -1 ? "v_diffsel" : "v_songsel")
@@ -308,18 +336,22 @@ class SongSelect{
 			locked: true,
 			hasPointer: false,
 			options: 0,
+			modifiers: this.defaultModifierState(),
+			optionMenuOpen: false,
+			optionMenuRow: 0,
+			optionMenuHoverRow: null,
+			sound: 0,
 			selLock: false,
 			catJump: false,
 			focused: true,
-			waitPreview: 0
+			waitPreview: 0,
+			skip: false
 		}
 		this.songSelecting = {
 			speed: 400,
 			resize: 0.3,
 			scrollDelay: 0.1
 		}
-		this.wheelScrolls = 0
-		this.wheelTimer = 0
 		
 		this.startPreview(true)
 		
@@ -366,22 +398,7 @@ class SongSelect{
 			this.touchFullBtn.style.display = "block"
 			pageEvents.add(this.touchFullBtn, "touchend", toggleFullscreen)
 		}
-		if(touchEnabled){
-		this.touchSearchBtn = document.getElementById("touch-search-btn")
 		
-		if (this.touchSearchBtn) {
-			this.touchSearchBtn.style.display = "inline-block"
-			
-			const openSearch = (e) => {
-				e.preventDefault(); // 防止穿透点击
-				this.search.display(); // 这一句等效于触发了 Ctrl + F，用于呼出搜索菜单
-			};
-			
-			pageEvents.add(this.touchSearchBtn, "touchend", openSearch)
-		}
-		    
-		}
-
 		pageEvents.add(this.canvas, "wheel", this.mouseWheel.bind(this))
 
 		this.selectable = document.getElementById("song-sel-selectable")
@@ -396,23 +413,763 @@ class SongSelect{
 			pageEvents.send("song-select-difficulty", this.songs[this.selectedSong])
 		}
 	}
-
+	
 	setAltText(element, text){
 		element.innerText = text
 		element.setAttribute("alt", text)
 	}
 
-	setSelectedSong(songIdx, drawBg=true){
-		if(drawBg){
-			var cat = this.songs[songIdx].originalCategory
-			if(cat){
-				this.drawBackground(cat)
-			}else{
-				this.drawBackground(false)
+	localizedOptionText(labels){
+		return labels[strings.id] || labels.en || labels.ja || ""
+	}
+
+	getTjaTitleLanguage(){
+		var value = settings && settings.getItem ? settings.getItem("tjaTitle") : "title"
+		return value && value !== "title" ? value.slice("title".length) : null
+	}
+
+	getTjaLanguageAliases(lang){
+		if(lang === "cn"){
+			return ["cn", "zh"]
+		}else if(lang === "tw"){
+			return ["tw", "zh"]
+		}else if(lang === "ko"){
+			return ["ko", "kr"]
+		}
+		return [lang]
+	}
+
+	getTjaLocalizedValue(values, lang){
+		if(!values || !lang){
+			return ""
+		}
+		var aliases = this.getTjaLanguageAliases(lang)
+		for(var i = 0; i < aliases.length; i++){
+			var value = values[aliases[i]]
+			if(value){
+				return value
 			}
 		}
+		return ""
+	}
 
-		this.selectedSong = songIdx
+	normalizeTjaSubtitle(subtitle){
+		subtitle = subtitle || ""
+		if(subtitle.startsWith("--") || subtitle.startsWith("++")){
+			subtitle = subtitle.slice(2).trim()
+		}
+		return subtitle
+	}
+
+	isTjaSong(song){
+		if(song.type === "tja"){
+			return true
+		}
+		return !!(song.chart && song.chart.name && song.chart.name.toLowerCase().endsWith(".tja"))
+	}
+
+	getSongTitle(song){
+		if(this.isTjaSong(song)){
+			var lang = this.getTjaTitleLanguage()
+			var localizedTitle = this.getTjaLocalizedValue(song.title_lang, lang)
+			if(localizedTitle){
+				return localizedTitle
+			}
+			return song.tja_title || song.title || ""
+		}
+		return this.getLocalTitle(song.title, song.title_lang)
+	}
+
+	getSongSubtitle(song, title){
+		if(this.isTjaSong(song)){
+			var lang = this.getTjaTitleLanguage()
+			if(this.getTjaLocalizedValue(song.title_lang, lang)){
+				return this.getTjaLocalizedValue(song.subtitle_lang, lang)
+			}
+			return song.tja_subtitle || song.subtitle || ""
+		}
+		return this.getLocalTitle(title === song.title ? song.subtitle : "", song.subtitle_lang)
+	}
+
+	updateSongSearchText(song){
+		var title = this.getSongTitle(song)
+		song.titlePrepared = this.prepareSearchText(title)
+		var subtitle = this.getSongSubtitle(song, title)
+		song.subtitlePrepared = this.prepareSearchText(subtitle)
+	}
+
+	applyTjaTitleMetadata(song, tja){
+		var changed = false
+		if(!song.title_lang){
+			song.title_lang = {}
+		}
+		if(!song.subtitle_lang){
+			song.subtitle_lang = {}
+		}
+		for(var diff in tja.metadata){
+			var meta = tja.metadata[diff]
+			if(meta.title && song.tja_title !== meta.title){
+				song.tja_title = meta.title
+				changed = true
+			}
+			if(meta.subtitle !== undefined){
+				var subtitle = this.normalizeTjaSubtitle(meta.subtitle)
+				if(song.tja_subtitle !== subtitle){
+					song.tja_subtitle = subtitle
+					changed = true
+				}
+			}
+			for(var i = 0; i < languageList.length; i++){
+				var lang = languageList[i]
+				var title = this.getTjaMetaValue(meta, "title", lang)
+				if(title && song.title_lang[lang] !== title){
+					song.title_lang[lang] = title
+					changed = true
+				}
+				var subtitleLang = this.getTjaMetaValue(meta, "subtitle", lang)
+				if(subtitleLang){
+					subtitleLang = this.normalizeTjaSubtitle(subtitleLang)
+					if(song.subtitle_lang[lang] !== subtitleLang){
+						song.subtitle_lang[lang] = subtitleLang
+						changed = true
+					}
+				}
+			}
+		}
+		if(Object.keys(song.title_lang).length === 0){
+			delete song.title_lang
+		}
+		if(Object.keys(song.subtitle_lang).length === 0){
+			delete song.subtitle_lang
+		}
+		return changed
+	}
+
+	getTjaMetaValue(meta, field, lang){
+		var aliases = this.getTjaLanguageAliases(lang)
+		for(var i = 0; i < aliases.length; i++){
+			var value = meta[field + aliases[i]]
+			if(value){
+				return value
+			}
+		}
+		return ""
+	}
+
+	loadTjaTitleMetadata(selectedSong){
+		var currentSong = this.songs[selectedSong]
+		if(!currentSong || !this.isTjaSong(currentSong) || currentSong.tjaTitleLoaded || currentSong.tjaTitleLoading || currentSong.tjaTitleFailed){
+			return
+		}
+		if(currentSong.unloaded || !currentSong.chart || !currentSong.chart.read){
+			return
+		}
+		var assetIndex = assets.songs.findIndex(song => song.id === currentSong.id)
+		var assetSong = assetIndex !== -1 ? assets.songs[assetIndex] : currentSong
+		if(assetSong.tjaTitleLoaded || assetSong.tjaTitleLoading || assetSong.tjaTitleFailed){
+			return
+		}
+		assetSong.tjaTitleLoading = true
+		currentSong.tjaTitleLoading = true
+		var file = currentSong.chart
+		file.read("sjis").then(dataRaw => {
+			var data = dataRaw ? dataRaw.replace(/\0/g, "").split("\n") : []
+			var tja = new ParseTja(data, "oni", 0, 0, true)
+			if(file instanceof RemoteFile){
+				assetSong.chart = new CachedFile(dataRaw, file)
+				currentSong.chart = assetSong.chart
+			}
+			var changed = this.applyTjaTitleMetadata(assetSong, tja)
+			if(assetSong !== currentSong){
+				changed = this.applyTjaTitleMetadata(currentSong, tja) || changed
+			}
+			assetSong.tjaTitleLoaded = true
+			currentSong.tjaTitleLoaded = true
+			if(assetIndex !== -1){
+				this.updateSongSearchText(assetSong)
+				assets.songs[assetIndex] = assetSong
+			}
+			if(changed && this.songs[selectedSong] && this.songs[selectedSong].id === currentSong.id){
+				this.updateSongSearchText(currentSong)
+				this.songs[selectedSong] = this.addSong(currentSong)
+				this.currentSongCache.clear()
+				this.songTitleCache.clear()
+			}
+		}).catch(e => {
+			assetSong.tjaTitleFailed = true
+			currentSong.tjaTitleFailed = true
+			console.warn(e)
+		}).finally(() => {
+			delete assetSong.tjaTitleLoading
+			delete currentSong.tjaTitleLoading
+		})
+	}
+
+	prepareSearchText(text){
+		return text ? fuzzysort.prepare(text.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) : null
+	}
+
+	defaultModifierState(){
+		return {
+			mode: 0,
+			speed: 1,
+			doron: false,
+			inverse: false,
+			shuffle: 0,
+			hardcore: false,
+			note: 0
+		}
+	}
+
+	getOptionRows(){
+		return [{
+			key: "mode",
+			label: this.localizedOptionText({ja: "演奏", en: "Mode", cn: "模式", tw: "模式", ko: "모드"}),
+			choices: [{
+				value: 0,
+				text: strings.none
+			}, {
+				value: 1,
+				text: this.localizedOptionText({ja: "オート", en: "Auto", cn: "自动", tw: "自動", ko: "자동"}),
+				icon: "yatai_modifier_mod_auto"
+			}, {
+				value: 2,
+				text: this.localizedOptionText({ja: "通信", en: "Netplay", cn: "联机", tw: "連線", ko: "온라인"})
+			}]
+		}, {
+			key: "speed",
+			label: this.localizedOptionText({ja: "はやさ", en: "Speed", cn: "速度", tw: "速度", ko: "속도"}),
+			choices: [{
+				value: 1,
+				text: strings.none
+			}, {
+				value: 2,
+				text: strings.songMods.x2,
+				icon: "yatai_modifier_mod_baisaku"
+			}, {
+				value: 3,
+				text: strings.songMods.x3,
+				icon: "yatai_modifier_mod_sanbai"
+			}, {
+				value: 4,
+				text: strings.songMods.x4,
+				icon: "yatai_modifier_mod_yonbai"
+			}]
+		}, {
+			key: "doron",
+			label: strings.songMods.doron,
+			choices: [{
+				value: false,
+				text: strings.none
+			}, {
+				value: true,
+				text: strings.songMods.doron,
+				icon: "yatai_modifier_mod_doron"
+			}]
+		}, {
+			key: "inverse",
+			label: strings.songMods.reverse,
+			choices: [{
+				value: false,
+				text: strings.none
+			}, {
+				value: true,
+				text: strings.songMods.reverse,
+				icon: "yatai_modifier_mod_abekobe"
+			}]
+		}, {
+			key: "shuffle",
+			label: this.localizedOptionText({ja: "ランダム", en: "Random", cn: "随机", tw: "隨機", ko: "랜덤"}),
+			choices: [{
+				value: 0,
+				text: strings.none
+			}, {
+				value: 0.25,
+				text: strings.songMods.half_shuffle,
+				icon: "yatai_modifier_mod_kimagure"
+			}, {
+				value: 0.5,
+				text: strings.songMods.shuffle,
+				icon: "yatai_modifier_mod_detarame"
+			}]
+		}, {
+			key: "hardcore",
+			label: this.localizedOptionText({ja: "ハード", en: "Hard", cn: "硬核", tw: "硬核", ko: "하드"}),
+			choices: [{
+				value: false,
+				text: strings.none
+			}, {
+				value: true,
+				text: strings.songMods.hardcore,
+				badge: "HC"
+			}]
+		}, {
+			key: "note",
+			label: this.localizedOptionText({ja: "音符", en: "Notes", cn: "音符", tw: "音符", ko: "음표"}),
+			choices: [{
+				value: 0,
+				text: strings.none
+			}, {
+				value: 1,
+				text: this.localizedOptionText({ja: "ドン", en: "Don", cn: "咚", tw: "咚", ko: "동"}),
+				badge: "ド"
+			}, {
+				value: 2,
+				text: this.localizedOptionText({ja: "カッ", en: "Kat", cn: "咔", tw: "咔", ko: "캇"}),
+				badge: "カ"
+			}]
+		}]
+	}
+
+	legacyOptionsToModifiers(value){
+		var modifiers = this.defaultModifierState()
+		if(value === 1){
+			modifiers.mode = 1
+		}else if(value === 2){
+			modifiers.mode = 2
+		}else if(value > 2 && value < 6){
+			modifiers.speed = value - 1
+		}else if(value === 6){
+			modifiers.doron = true
+		}else if(value === 7){
+			modifiers.inverse = true
+		}else if(value === 8){
+			modifiers.shuffle = 0.25
+		}else if(value === 9){
+			modifiers.shuffle = 0.5
+		}else if(value === 10){
+			modifiers.hardcore = true
+		}else if(value === 11){
+			modifiers.note = 1
+		}else if(value === 12){
+			modifiers.note = 2
+		}
+		return modifiers
+	}
+
+	legacyOptionFromModifiers(modifiers){
+		var selected = []
+		if(modifiers.mode === 1){
+			selected.push(1)
+		}else if(modifiers.mode === 2){
+			selected.push(2)
+		}
+		if(modifiers.speed > 1){
+			selected.push(modifiers.speed + 1)
+		}
+		if(modifiers.doron){
+			selected.push(6)
+		}
+		if(modifiers.inverse){
+			selected.push(7)
+		}
+		if(modifiers.shuffle === 0.25){
+			selected.push(8)
+		}else if(modifiers.shuffle === 0.5){
+			selected.push(9)
+		}
+		if(modifiers.hardcore){
+			selected.push(10)
+		}
+		if(modifiers.note === 1){
+			selected.push(11)
+		}else if(modifiers.note === 2){
+			selected.push(12)
+		}
+		return selected.length === 1 ? selected[0] : 0
+	}
+
+	syncLegacyOptions(){
+		this.state.options = this.legacyOptionFromModifiers(this.state.modifiers)
+	}
+
+	isNetplayOptionAvailable(){
+		return p2.session || p2.socket && p2.socket.readyState === 1 && !assets.customSongs
+	}
+
+	optionChoiceEnabled(row, choice){
+		return !(row.key === "mode" && choice.value === 2 && !this.isNetplayOptionAvailable())
+	}
+
+	getOptionChoiceIndex(row){
+		var value = this.state.modifiers[row.key]
+		for(var i = 0; i < row.choices.length; i++){
+			if(row.choices[i].value === value && this.optionChoiceEnabled(row, row.choices[i])){
+				return i
+			}
+		}
+		return 0
+	}
+
+	getCurrentOptionChoice(row){
+		return row.choices[this.getOptionChoiceIndex(row)]
+	}
+
+	setOptionChoiceIndex(rowIndex, choiceIndex){
+		var row = this.optionRows[rowIndex]
+		var choice = row.choices[choiceIndex]
+		if(choice && this.optionChoiceEnabled(row, choice)){
+			this.state.modifiers[row.key] = choice.value
+			this.syncLegacyOptions()
+			return true
+		}
+		return false
+	}
+
+	moveOptionMenuRow(moveBy){
+		this.state.optionMenuRow = this.mod(this.optionRows.length, this.state.optionMenuRow + moveBy)
+		this.playSound("se_ka", 0, p2.session ? p2.player : false)
+	}
+
+	moveOptionMenuValue(moveBy){
+		var rowIndex = this.state.optionMenuRow
+		var row = this.optionRows[rowIndex]
+		var index = this.getOptionChoiceIndex(row)
+		for(var i = 0; i < row.choices.length; i++){
+			index = this.mod(row.choices.length, index + moveBy)
+			if(this.setOptionChoiceIndex(rowIndex, index)){
+				this.playSound("se_ka", 0, p2.session ? p2.player : false)
+				return
+			}
+		}
+	}
+
+	advanceOptionMenu(){
+		if(this.state.optionMenuRow < this.optionRows.length - 1){
+			this.state.optionMenuRow++
+			this.playSound("se_don", 0, p2.session ? p2.player : false)
+		}else{
+			this.syncLegacyOptions()
+			this.closeOptionsMenu(true)
+		}
+	}
+
+	openOptionsMenu(){
+		this.selectedDiff = 1
+		if(!this.state.optionMenuOpen){
+			this.state.optionMenuRow = 0
+			this.state.optionMenuOpen = true
+			this.state.optionMenuHoverRow = null
+			this.playSound("se_ka", 0, p2.session ? p2.player : false)
+		}
+	}
+
+	closeOptionsMenu(sound){
+		if(this.state.optionMenuOpen){
+			this.state.optionMenuOpen = false
+			this.state.optionMenuHoverRow = null
+			if(sound){
+				this.playSound("se_don", 0, p2.session ? p2.player : false)
+			}
+		}
+	}
+
+	getSelectedModifiers(){
+		var source = this.state.modifiers || this.legacyOptionsToModifiers(this.state.options)
+		var modifiers = this.defaultModifierState()
+		for(var key in modifiers){
+			if(key in source){
+				modifiers[key] = source[key]
+			}
+		}
+		if(modifiers.mode === 2 && !this.isNetplayOptionAvailable()){
+			modifiers.mode = 0
+		}
+		return modifiers
+	}
+
+	getActiveModifierLabels(){
+		var modifiers = this.getSelectedModifiers()
+		var labels = []
+		for(var i = 0; i < this.optionRows.length; i++){
+			var row = this.optionRows[i]
+			var value = modifiers[row.key]
+			for(var j = 0; j < row.choices.length; j++){
+				var choice = row.choices[j]
+				if(choice.value === value && j !== 0){
+					labels.push(choice.text)
+					break
+				}
+			}
+		}
+		return labels
+	}
+
+	getOptionsSummary(){
+		var labels = this.getActiveModifierLabels()
+		if(labels.length === 0){
+			return strings.songOptions
+		}else if(labels.length === 1){
+			return labels[0]
+		}
+		return this.localizedOptionText({ja: "設定中", en: "Set", cn: "已设置", tw: "已設定", ko: "설정됨"})
+	}
+
+	modifiersDisableScore(modifiers){
+		modifiers = modifiers || this.getSelectedModifiers()
+		return modifiers.mode === 1 || modifiers.note !== 0
+	}
+
+	autoUnavailableIn2P(modifiers){
+		modifiers = modifiers || this.getSelectedModifiers()
+		return p2.session && modifiers.mode === 1
+	}
+
+	getOptionMenuLayout(){
+		var scale = 0.8
+		var rowH = 56 * scale
+		var rowStart = 88 * scale
+		var rowCount = this.optionRows.length
+		var bottomH = 128 * scale
+		return {
+			x: 205,
+			y: 112,
+			w: 464 * scale,
+			h: rowStart + rowH * rowCount + bottomH,
+			scale: scale,
+			rowX: 205 + 32 * scale,
+			rowStart: 112 + rowStart,
+			rowW: 400 * scale,
+			rowH: rowH,
+			bottomY: 112 + rowStart + rowH * rowCount
+		}
+	}
+
+	getOptionMenuHitLayout(layout){
+		var ratio = this.ratio || 1
+		var winW = this.winW || 1280 * ratio
+		var winH = this.winH || 720 * ratio
+		var frameLeft = winW / ratio / 2 - 1280 / 2
+		var frameTop = winH / ratio / 2 - 720 / 2
+		return Object.assign({}, layout, {
+			x: layout.x - frameLeft,
+			y: layout.y - frameTop,
+			rowX: layout.rowX - frameLeft,
+			rowStart: layout.rowStart - frameTop,
+			bottomY: layout.bottomY - frameTop
+		})
+	}
+
+	getOptionMenuArrowRects(layout, rowY){
+		var scale = layout.scale
+		var size = 22 * scale
+		var y = rowY + 16 * scale
+		return {
+			left: {
+				x: layout.rowX + 204 * scale,
+				y: y,
+				w: size,
+				h: size
+			},
+			right: {
+				x: layout.rowX + 354 * scale,
+				y: y,
+				w: size,
+				h: size
+			}
+		}
+	}
+
+	pointInRect(x, y, rect, padding){
+		padding = padding || 0
+		return x >= rect.x - padding && x <= rect.x + rect.w + padding && y >= rect.y - padding && y <= rect.y + rect.h + padding
+	}
+
+	optionMenuHit(x, y){
+		if(!this.state.optionMenuOpen){
+			return null
+		}
+		var layout = this.getOptionMenuHitLayout(this.getOptionMenuLayout())
+		if(x < layout.x || x > layout.x + layout.w || y < layout.y || y > layout.y + layout.h){
+			return null
+		}
+		for(var i = 0; i < this.optionRows.length; i++){
+			var rowY = layout.rowStart + i * layout.rowH
+			if(x >= layout.rowX && x <= layout.rowX + layout.rowW && y >= rowY && y <= rowY + layout.rowH){
+				var row = this.optionRows[i]
+				var direction = 0
+				if(row.choices.length > 1){
+					var arrows = this.getOptionMenuArrowRects(layout, rowY)
+					var padding = 8 * layout.scale
+					if(this.pointInRect(x, y, arrows.left, padding)){
+						direction = -1
+					}else if(this.pointInRect(x, y, arrows.right, padding)){
+						direction = 1
+					}
+				}
+				return {
+					row: i,
+					direction: direction
+				}
+			}
+		}
+		return {
+			row: null,
+			direction: 0
+		}
+	}
+
+	handleOptionMenuMouse(x, y){
+		var hit = this.optionMenuHit(x, y)
+		if(!hit){
+			return false
+		}
+		if(hit.row !== null){
+			this.state.optionMenuRow = hit.row
+			if(hit.direction){
+				this.moveOptionMenuValue(hit.direction)
+			}else{
+				this.playSound("se_ka", 0, p2.session ? p2.player : false)
+			}
+		}
+		return true
+	}
+
+	drawOptionMenuArrow(ctx, img, x, y, w, h, flip){
+		ctx.save()
+		if(flip){
+			ctx.translate(x + w, y)
+			ctx.scale(-1, 1)
+			ctx.drawImage(img, 0, 0, w, h)
+		}else{
+			ctx.drawImage(img, x, y, w, h)
+		}
+		ctx.restore()
+	}
+
+	drawOptionMenuIcon(ctx, choice, x, y, size){
+		if(choice.icon && assets.image[choice.icon]){
+			var img = assets.image[choice.icon]
+			var iconSize = choice.icon === "yatai_modifier_mod_auto" ? size * 0.82 : size
+			ctx.drawImage(img, x + (size - iconSize) / 2, y + (size - iconSize) / 2, iconSize, iconSize)
+		}else if(choice.badge && assets.image["yatai_modifier_mod_box"]){
+			ctx.drawImage(assets.image["yatai_modifier_mod_box"], x, y, size, size)
+			this.draw.layeredText({
+				ctx: ctx,
+				text: choice.badge,
+				fontSize: choice.badge.length > 1 ? size * 0.42 : size * 0.62,
+				fontFamily: this.font,
+				x: x + size / 2,
+				y: y + size / 2,
+				width: size,
+				align: "center",
+				baseline: "middle"
+			}, [
+				{outline: "#000", letterBorder: 5},
+				{fill: "#fff"}
+			])
+		}
+	}
+
+	drawOptionsMenu(ctx){
+		var top = assets.image["yatai_modifier_top"]
+		var bg = assets.image["yatai_modifier_background"]
+		var bottom = assets.image["yatai_modifier_bottom"]
+		var rowBg = assets.image["yatai_modifier_mod_bg"]
+		var rowHighlight = assets.image["yatai_modifier_mod_bg_highlight"]
+		var arrow = assets.image["yatai_modifier_blue_arrow"]
+		if(!top || !bg || !bottom || !rowBg || !rowHighlight || !arrow){
+			return
+		}
+		
+		var layout = this.getOptionMenuLayout()
+		var scale = layout.scale
+		var rowCount = this.optionRows.length
+		var topH = 96 * scale
+		var bottomH = 128 * scale
+		var middleY = layout.y + topH
+		var middleH = layout.bottomY - middleY + 8 * scale
+		
+		ctx.save()
+		ctx.shadowColor = "rgba(0, 0, 0, 0.35)"
+		ctx.shadowBlur = 12
+		ctx.shadowOffsetX = 4
+		ctx.shadowOffsetY = 4
+		ctx.drawImage(top, layout.x, layout.y, layout.w, topH)
+		ctx.drawImage(bg, layout.x, middleY, layout.w, middleH)
+		ctx.drawImage(bottom, layout.x, layout.bottomY, layout.w, bottomH)
+		ctx.shadowColor = "transparent"
+		
+		for(var i = 0; i < rowCount; i++){
+			var row = this.optionRows[i]
+			var selected = i === this.state.optionMenuRow
+			var hovered = i === this.state.optionMenuHoverRow
+			var rowY = layout.rowStart + i * layout.rowH
+			var rowImg = selected || hovered ? rowHighlight : rowBg
+			var choice = this.getCurrentOptionChoice(row)
+			var iconSize = 40 * scale
+			var iconX = layout.rowX + 10 * scale
+			var iconY = rowY + 8 * scale
+			var hasIcon = choice.icon || choice.badge
+			
+			ctx.drawImage(rowImg, layout.rowX, rowY, layout.rowW, layout.rowH)
+			if(selected){
+				this.drawOptionMenuArrow(ctx, arrow, layout.rowX - 21 * scale, rowY + 16 * scale, 22 * scale, 22 * scale, true)
+			}
+			this.drawOptionMenuIcon(ctx, choice, iconX, iconY, iconSize)
+			
+			this.draw.layeredText({
+				ctx: ctx,
+				text: row.label,
+				fontSize: 23 * scale,
+				fontFamily: this.font,
+				x: layout.rowX + (hasIcon ? 62 : 20) * scale,
+				y: rowY + 28 * scale,
+				width: (hasIcon ? 118 : 160) * scale,
+				align: "left",
+				baseline: "middle"
+			}, [
+				{outline: "#fff", letterBorder: 5 * scale},
+				{fill: "#273a13"}
+			])
+			
+			if(selected && row.choices.length > 1){
+				var arrows = this.getOptionMenuArrowRects(layout, rowY)
+				this.drawOptionMenuArrow(ctx, arrow, arrows.left.x, arrows.left.y, arrows.left.w, arrows.left.h)
+				this.drawOptionMenuArrow(ctx, arrow, arrows.right.x, arrows.right.y, arrows.right.w, arrows.right.h, true)
+			}
+			
+			this.draw.layeredText({
+				ctx: ctx,
+				text: choice.text,
+				fontSize: 22 * scale,
+				fontFamily: this.font,
+				x: layout.rowX + 290 * scale,
+				y: rowY + 28 * scale,
+				width: 140 * scale,
+				align: "center",
+				baseline: "middle"
+			}, [
+				{outline: "#fff", letterBorder: 5 * scale},
+				{fill: "#273a13"}
+			])
+			}
+			var modifiers = this.getSelectedModifiers()
+			var warnings = []
+			if(this.autoUnavailableIn2P(modifiers)){
+				warnings.push(strings.autoUnavailable2PWarning)
+			}
+			if(this.modifiersDisableScore(modifiers)){
+				warnings.push(strings.scoreNotSavedWarning)
+			}
+			for(var i = 0; i < warnings.length; i++){
+				var warningY = layout.bottomY + (28 + i * 24) * scale
+				this.draw.layeredText({
+					ctx: ctx,
+					text: warnings[i],
+					fontSize: 20 * scale,
+					fontFamily: this.font,
+					x: layout.x + layout.w / 2,
+					y: warningY,
+					width: layout.w - 36 * scale,
+					align: "center",
+					baseline: "middle"
+				}, [
+					{outline: "#fff", letterBorder: 5 * scale},
+					{fill: "#d12f24"}
+				])
+			}
+		ctx.restore()
 	}
 
 	keyPress(pressed, name, event, repeat){
@@ -427,7 +1184,8 @@ class SongSelect{
 		if(name === "ctrl" || name === "shift" || !this.redrawRunning){
 			return
 		}
-		var ctrl = event ? event.ctrlKey : (this.pressedKeys["ctrl"] || this.pressedKeys["ctrlGamepad"])
+		var ctrl = this.pressedKeys["ctrl"] || this.pressedKeys["ctrlGamepad"]
+		var ctrl2 = event ? event.ctrlKey : this.pressedKeys["ctrl"]
 		var shift = event ? event.shiftKey : this.pressedKeys["shift"]
 		if(this.state.showWarning){
 			if(name === "confirm"){
@@ -435,14 +1193,44 @@ class SongSelect{
 				this.state.showWarning = false
 				this.showWarning = false
 			}
-		}else if(this.search.opened){
-			this.search.keyPress(pressed, name, event, repeat, ctrl)
+		}else if (this.search){
+			if(name === "back" || (event && event.keyCode && event.keyCode === 70 && ctrl)) {
+				this.removeSearch(true)
+				if(event){ event.preventDefault() }
+			}else if(name === "down" && this.search.results.length){
+				if(this.search.input == document.activeElement && this.search.results){
+					this.searchSetActive(0)
+				}else if(this.search.active === this.search.results.length-1){
+					this.searchSetActive(null)
+					this.search.input.focus()
+				}else if(Number.isInteger(this.search.active)){
+					this.searchSetActive(this.search.active+1)
+				}else{
+					this.searchSetActive(0)
+				}
+			}else if(name === "up" && this.search.results.length){
+				if(this.search.input == document.activeElement && this.search.results){
+					this.searchSetActive(this.search.results.length-1)
+				}else if(this.search.active === 0){
+					this.searchSetActive(null)
+					this.search.input.focus()
+					setTimeout(() => {
+						this.search.input.setSelectionRange(this.search.input.value.length, this.search.input.value.length)
+					}, 0)
+				}else if(Number.isInteger(this.search.active)){
+					this.searchSetActive(this.search.active-1)
+				}else{
+					this.searchSetActive(this.search.results.length-1)
+				}	
+			}else if(name === "confirm"){
+				if(Number.isInteger(this.search.active)){
+					this.searchProceed(parseInt(this.search.results[this.search.active].dataset.songId))
+				}
+			}
 		}else if(this.state.screen === "song"){
 			if(event && event.keyCode && event.keyCode === 70 && ctrl){
-				this.search.display()
-				if(event){
-					event.preventDefault()
-				}
+				this.displaySearch()
+				if(event){ event.preventDefault() }
 			}else if(name === "confirm"){
 				this.toSelectDifficulty()
 			}else if(name === "back"){
@@ -454,7 +1242,13 @@ class SongSelect{
 					if(!repeat){
 						this.categoryJump(-1)
 					}
-				}else{
+				}
+				else if(ctrl2 || ctrl){
+					if(!repeat){
+						this.moveToSong(-7.1)
+					}
+				}
+				else{
 					this.moveToSong(-1)
 				}
 			}else if(name === "right"){
@@ -462,7 +1256,13 @@ class SongSelect{
 					if(!repeat){
 						this.categoryJump(1)
 					}
-				}else{
+				}
+				else if(ctrl2 || ctrl){
+					if(!repeat){
+						this.moveToSong(7.1)
+					}
+				}
+				else{
 					this.moveToSong(1)
 				}
 			}else if(name === "jump_left" && !repeat){
@@ -475,15 +1275,33 @@ class SongSelect{
 			}
 		}else if(this.state.screen === "difficulty"){
 			if(event && event.keyCode && event.keyCode === 70 && ctrl){
-				this.search.display()
-				if(event){
-					event.preventDefault()
+				this.displaySearch()
+				if(event){ event.preventDefault() }
+			}else if(this.state.optionMenuOpen){
+				if(name === "confirm"){
+					this.advanceOptionMenu()
+				}else if(name === "back" || name === "session"){
+					this.closeOptionsMenu()
+					this.playSound("se_cancel", 0, p2.session ? p2.player : false)
+				}else if(name === "up"){
+					this.moveOptionMenuRow(-1)
+				}else if(name === "down"){
+					this.moveOptionMenuRow(1)
+				}else if(name === "left"){
+					this.moveOptionMenuValue(-1)
+				}else if(name === "right"){
+					this.moveOptionMenuValue(1)
+				}else if(name === "mute" || name === "ctrlGamepad"){
+					this.endPreview(true)
+					this.playBgm(false)
 				}
 			}else if(name === "confirm"){
 				if(this.selectedDiff === 0){
 					this.toSongSelect()
 				}else if(this.selectedDiff === 1){
-					this.toOptions(1)
+					this.openOptionsMenu()
+				}else if(this.selectedDiff === 2){
+					this.toSound(1)
 				}else{
 					this.toLoadSong(this.selectedDiff - this.diffOptions.length, shift, ctrl)
 				}
@@ -494,17 +1312,15 @@ class SongSelect{
 			}else if(name === "right"){
 				this.moveToDiff(1)
 			}else if(this.selectedDiff === 1 && (name === "up" || name === "down")){
-				this.toOptions(name === "up" ? -1 : 1)
+				this.openOptionsMenu()
 			}else if(name === "mute" || name === "ctrlGamepad"){
 				this.endPreview(true)
 				this.playBgm(false)
 			}
 		}else if(this.state.screen === "title" || this.state.screen === "titleFadeIn"){
 			if(event && event.keyCode && event.keyCode === 70 && ctrl){
-				this.search.display()
-				if(event){
-					event.preventDefault()
-				}
+				this.displaySearch()
+				if(event){ event.preventDefault() }
 			}
 		}
 	}
@@ -523,15 +1339,13 @@ class SongSelect{
 			if(event.which !== 1){
 				return
 			}
-			var mouse = this.mouseOffset(event.offsetX, event.offsetY)
+			var mouse = this.canvasMouseOffset(event.clientX, event.clientY)
 			var shift = event.shiftKey
 			var ctrl = event.ctrlKey
 			var touch = false
 		}else{
 			event.preventDefault()
-			var x = event.touches[0].pageX - this.canvas.offsetLeft
-			var y = event.touches[0].pageY - this.canvas.offsetTop
-			var mouse = this.mouseOffset(x, y)
+			var mouse = this.canvasMouseOffset(event.touches[0].clientX, event.touches[0].clientY)
 			var shift = false
 			var ctrl = false
 			var touch = true
@@ -544,7 +1358,7 @@ class SongSelect{
 			}
 		}else if(this.state.screen === "song"){
 			if(20 < mouse.y && mouse.y < 90 && 410 < mouse.x && mouse.x < 880 && (mouse.x < 540 || mouse.x > 750)){
-				this.categoryJump(mouse.x < 640 ? -1 : 1)
+				this.moveToSong(mouse.x < 640 ? -7.1 : 7.1)
 			}else if(!p2.session && 60 < mouse.x && mouse.x < 332 && 640 < mouse.y && mouse.y < 706 && gameConfig.accounts){
 				this.toAccount()
 			}else if(p2.session && 438 < mouse.x && mouse.x < 834 && mouse.y > 603){
@@ -560,6 +1374,17 @@ class SongSelect{
 				}
 			}
 		}else if(this.state.screen === "difficulty"){
+			if(this.state.optionMenuOpen){
+				if(this.handleOptionMenuMouse(mouse.x, mouse.y)){
+					return
+				}else if(mouse.x < 183 || mouse.x > 1095 || mouse.y < 54 || mouse.y > 554){
+					this.toSongSelect()
+				}else{
+					this.closeOptionsMenu()
+					this.playSound("se_cancel", 0, p2.session ? p2.player : false)
+				}
+				return
+			}
 			var moveBy = this.diffSelMouse(mouse.x, mouse.y)
 			if(mouse.x < 183 || mouse.x > 1095 || mouse.y < 54 || mouse.y > 554){
 				this.toSongSelect()
@@ -567,7 +1392,9 @@ class SongSelect{
 				this.selectedDiff = 0
 				this.toSongSelect()
 			}else if(moveBy === 1){
-				this.toOptions(1)
+				this.openOptionsMenu()
+			}else if(moveBy === 2){
+				this.toSound(1)
 			}else if(moveBy === "maker"){
 				window.open(this.songs[this.selectedSong].maker.url)
 			}else if(moveBy === this.diffOptions.length + 4){
@@ -596,13 +1423,13 @@ class SongSelect{
 		}
 	}
 	mouseMove(event){
-		var mouse = this.mouseOffset(event.offsetX, event.offsetY)
+		var mouse = this.canvasMouseOffset(event.clientX, event.clientY)
 		var moveTo = null
 		if(this.state.showWarning){
 			if(408 < mouse.x && mouse.x < 872 && 470 < mouse.y && mouse.y < 550){
 				moveTo = "showWarning"
 			}
-		}else if(this.state.screen === "song" && !this.search.opened){
+		}else if(this.state.screen === "song" && !this.search){
 			if(20 < mouse.y && mouse.y < 90 && 410 < mouse.x && mouse.x < 880 && (mouse.x < 540 || mouse.x > 750)){
 				moveTo = mouse.x < 640 ? "categoryPrev" : "categoryNext"
 			}else if(!p2.session && 60 < mouse.x && mouse.x < 332 && 640 < mouse.y && mouse.y < 706 && gameConfig.accounts){
@@ -619,6 +1446,12 @@ class SongSelect{
 			}
 			this.state.moveHover = moveTo
 		}else if(this.state.screen === "difficulty"){
+			if(this.state.optionMenuOpen){
+				var hit = this.optionMenuHit(mouse.x, mouse.y)
+				this.state.optionMenuHoverRow = hit && hit.row !== null ? hit.row : null
+				this.pointer(!!hit)
+				return
+			}
 			var moveTo = this.diffSelMouse(mouse.x, mouse.y)
 			if(moveTo === null && this.state.moveHover === this.selectedDiff){
 				this.state.mouseMoveMS = this.getMS() - 1000
@@ -632,6 +1465,10 @@ class SongSelect{
 			x: (offsetX * this.pixelRatio - this.winW / 2) / this.ratio + 1280 / 2,
 			y: (offsetY * this.pixelRatio - this.winH / 2) / this.ratio + 720 / 2
 		}
+	}
+	canvasMouseOffset(clientX, clientY){
+		var rect = this.canvas.getBoundingClientRect()
+		return this.mouseOffset(clientX - rect.left, clientY - rect.top)
 	}
 	pointer(enabled){
 		if(!this.canvas){
@@ -688,7 +1525,20 @@ class SongSelect{
 	}
 	
 	moveToSong(moveBy, fromP2){
-		var ms = this.getMS()
+		var ctrl = false
+		if(moveBy == 7.1){
+			moveBy = 7
+			ctrl = true
+			var ms = this.getMS() - 799
+		}
+		else if(moveBy == -7.1){
+			moveBy = -7
+			ctrl = true
+			var ms = this.getMS() - 799
+		}
+		else{
+			var ms = this.getMS()
+		}
 		if(p2.session && !fromP2){
 			if(!this.state.selLock && ms > this.state.moveMS + 800){
 				this.state.selLock = true
@@ -706,7 +1556,11 @@ class SongSelect{
 			this.state.lastMove = moveBy
 			this.state.locked = 1
 			this.state.moveHover = null
-			
+			if(ctrl){
+				this.state.skip = true
+			}else{
+				this.state.skip = false
+			}
 			var lastMoveMul = Math.pow(Math.abs(moveBy), 1 / 4)
 			var changeSpeed = this.songSelecting.speed * lastMoveMul
 			var resize = changeSpeed * this.songSelecting.resize / lastMoveMul
@@ -716,10 +1570,15 @@ class SongSelect{
 			
 			var soundsDelay = Math.abs((scroll + resize) / moveBy)
 			this.lastMoveBy = fromP2 ? fromP2.player : false
-			
-			for(var i = 0; i < Math.abs(moveBy) - 1; i++){
-				this.playSound("se_ka", (resize + i * soundsDelay) / 1000, fromP2 ? fromP2.player : false)
+			if(ctrl){
+				this.playSound("se_jump", 0, fromP2 ? fromP2.player : false)
 			}
+			else{
+				for(var i = 0; i < Math.abs(moveBy) - 1; i++){
+					this.playSound("se_ka", (resize + i * soundsDelay) / 1000, fromP2 ? fromP2.player : false)
+				}
+			}
+			ctrl = false
 			this.pointer(false)
 		}
 	}
@@ -753,31 +1612,35 @@ class SongSelect{
 		}
 	}
 	
-	toSelectDifficulty(fromP2, playVoice=true){
+	toSelectDifficulty(fromP2){
 		var currentSong = this.songs[this.selectedSong]
-		if(p2.session && !fromP2 && (!currentSong.action || !currentSong.p2Enabled)){
+		if(p2.session && !fromP2 && currentSong.action !== "random"){
 			if(this.songs[this.selectedSong].courses){
 				if(!this.state.selLock){
 					this.state.selLock = true
 					p2.send("songsel", {
 						song: this.selectedSong,
-						selected: true,
-						fromRandom: this.lastRandom
+						selected: true
 					})
 				}
 			}
 		}else if(this.state.locked === 0 || fromP2){
-			this.search.remove()
+			this.removeSearch()
 			if(currentSong.courses){
 				if(currentSong.unloaded){
 					return
 				}
-
+				
+				if(fromP2 && fromP2.player !== p2.player){
+					this.drawBackground(currentSong.originalCategory)	
+				}
 				var prevScreen = this.state.screen
 				this.state.screen = "difficulty"
 				this.state.screenMS = this.getMS()
 				this.state.locked = true
 				this.state.moveHover = null
+				this.state.optionMenuOpen = false
+				this.state.optionMenuHoverRow = null
 				this.state.ura = 0
 				if(this.selectedDiff === this.diffOptions.length + 4){
 					this.selectedDiff = this.diffOptions.length + 3
@@ -785,29 +1648,34 @@ class SongSelect{
 				
 				this.playSound("se_don", 0, fromP2 ? fromP2.player : false)
 				assets.sounds["v_songsel"].stop()
-				if(!this.showWarning && prevScreen !== "difficulty" && playVoice){
+				if(!this.showWarning && prevScreen !== "difficulty"){
 					this.playSound("v_diffsel", 0.3)
 				}
 				pageEvents.send("song-select-difficulty", currentSong)
 			}else if(currentSong.action === "back"){
+				this.clean()
 				this.toTitleScreen()
 			}else if(currentSong.action === "random"){
+				this.playSound("se_don", 0, fromP2 ? fromP2.player : false)
+				this.state.locked = true
 				do{
 					var i = Math.floor(Math.random() * this.songs.length)
 				}while(!this.songs[i].courses)
-				this.setSelectedSong(i)
-				this.lastRandom = true
-				this.playBgm(false)
-				this.toSelectDifficulty(false, playVoice=false)
+				var moveBy = i - this.selectedSong
+				setTimeout(() => {
+					this.moveToSong(moveBy, fromP2)
+				}, 200)
 				pageEvents.send("song-select-random")
 			}else if(currentSong.action === "search"){
-				this.search.display(true)
+				this.displaySearch(true)
 			}else if(currentSong.action === "tutorial"){
 				this.toTutorial()
 			}else if(currentSong.action === "about"){
 				this.toAbout()
 			}else if(currentSong.action === "settings"){
 				this.toSettings()
+			}else if(currentSong.action === "songSuggest"){
+				const tab = window.open('https://docs.google.com/forms/d/e/1FAIpQLScy9dObtt-EQcxmfpZ2439ElZ_OS7L37ngnUlBbGQex4vtq_g/viewform?usp=sf_link', '_blank')
 			}else if(currentSong.action === "customSongs"){
 				this.toCustomSongs()
 			}else if(currentSong.action === "plugins"){
@@ -821,22 +1689,17 @@ class SongSelect{
 			if(!this.state.selLock){
 				this.state.selLock = true
 				p2.send("songsel", {
-					song: this.lastRandom ? this.songs.findIndex(song => song.action === "random") : this.selectedSong
+					song: this.selectedSong
 				})
 			}
-			
 		}else if(fromP2 || this.state.locked !== 1){
 			this.state.screen = "song"
 			this.state.screenMS = this.getMS()
 			this.state.locked = true
 			this.state.moveHover = null
-
-			if(this.lastRandom){
-				this.endPreview(false)
-				this.setSelectedSong(this.songs.findIndex(song => song.action === "random"))
-				this.lastRandom = false
-			}
-
+			this.state.optionMenuOpen = false
+			this.state.optionMenuHoverRow = null
+			
 			assets.sounds["v_diffsel"].stop()
 			this.playSound("se_cancel", 0, fromP2 ? fromP2.player : false)
 		}
@@ -844,6 +1707,7 @@ class SongSelect{
 		pageEvents.send("song-select-back")
 	}
 	toLoadSong(difficulty, shift, ctrl, touch){
+		var selectedModifiers = this.getSelectedModifiers()
 		this.clean()
 		var selectedSong = this.songs[this.selectedSong]
 		assets.sounds["v_diffsel"].stop()
@@ -864,16 +1728,39 @@ class SongSelect{
 		}
 		var autoplay = false
 		var multiplayer = false
-		if(p2.session || this.state.options === 2){
+		var mods = {
+			speed: 1,
+			inverse: false,
+			shuffle: 0,
+			doron: false,
+			hardcore: false,
+			allDon: false,
+			allKat: false
+		}
+		var soundEffec = this.state.sound + 1
+		localStorage.setItem("vOneLocalStorage", soundEffec);
+		if(p2.session || selectedModifiers.mode === 2){
 			multiplayer = true
-		}else if(this.state.options === 1){
+		}else if(selectedModifiers.mode === 1){
 			autoplay = true
 		}else if(shift){
 			autoplay = shift
 		}else if(p2.socket && p2.socket.readyState === 1 && !assets.customSongs){
 			multiplayer = ctrl
 		}
-		var diff = this.difficultyId[difficulty]
+		
+		mods.speed = selectedModifiers.speed
+		mods.inverse = selectedModifiers.inverse
+			mods.shuffle = selectedModifiers.shuffle
+			mods.doron = selectedModifiers.doron
+			mods.hardcore = selectedModifiers.hardcore
+			mods.allDon = selectedModifiers.note === 1
+			mods.allKat = selectedModifiers.note === 2
+			if(mods.shuffle > 0){
+				mods.shuffleSeed = Math.floor(Math.random() * 0xFFFFFFFF) + 1
+			}
+			
+			var diff = this.difficultyId[difficulty]
 		
 		new LoadSong({
 			"title": selectedSong.title,
@@ -887,17 +1774,18 @@ class SongSelect{
 			"songSkin": selectedSong.songSkin,
 			"stars": selectedSong.courses[diff].stars,
 			"hash": selectedSong.hash,
+			"soundEffect": soundEffec,
+			"mods": mods,
 			"lyrics": selectedSong.lyrics
 		}, autoplay, multiplayer, touch)
 	}
 	toOptions(moveBy){
-		if(!p2.session){
+			this.openOptionsMenu()
+	}
+	toSound(moveBy){
 			this.playSound("se_ka", 0, p2.session ? p2.player : false)
-			this.selectedDiff = 1
-			do{
-				this.state.options = this.mod(this.optionsList.length, this.state.options + moveBy)
-			}while((!p2.socket || p2.socket.readyState !== 1 || assets.customSongs) && this.state.options === 2)
-		}
+			this.selectedDiff = 2
+			this.state.sound = this.mod(this.soundList.length, this.state.sound + moveBy)
 	}
 	toTitleScreen(){
 		if(!p2.session){
@@ -1090,14 +1978,13 @@ class SongSelect{
 			
 			this.selectableText = ""
 			
-			if(this.search.opened && this.search.container){
-				this.search.onInput(true)
+			if(this.search && this.searchContainer){
+				this.searchInput()
 			}
 		}else if(!document.hasFocus() && !p2.session){
 			if(this.state.focused){
 				this.state.focused = false
 				this.songSelect.classList.add("unfocused")
-				this.pressedKeys = {}
 			}
 			return
 		}else{
@@ -1121,8 +2008,16 @@ class SongSelect{
 		var screen = this.state.screen
 		var selectedWidth = this.songAsset.width
 		
-		this.search.redraw()
-		
+		if(this.search && this.searchContainer){
+			var vmin = Math.min(innerWidth, lastHeight) / 100
+			if(this.vmin !== vmin){
+				this.searchContainer.style.setProperty("--vmin", vmin + "px")
+				this.vmin = vmin
+			}
+		}else{
+			this.vmin = null
+		}
+
 		if(this.wheelScrolls !== 0 && !this.state.locked && ms >= this.wheelTimer + 20) {
 			if(p2.session){
 				this.moveToSong(this.wheelScrolls)
@@ -1133,7 +2028,7 @@ class SongSelect{
 			}
 			this.wheelScrolls = 0
 		}
-		
+
 		if(screen === "title" || screen === "titleFadeIn"){
 			if(ms > this.state.screenMS + 1000){
 				this.state.screen = "song"
@@ -1262,11 +2157,14 @@ class SongSelect{
 			
 			if(this.state.catJump || (this.state.move && ms > this.state.moveMS + resize2 - scrollDelay)){
 				var isJump = this.state.catJump
+				var isSkip = this.state.skip
 				var previousSelectedSong = this.selectedSong
 				
 				if(!isJump){
-					this.playSound("se_ka", 0, this.lastMoveBy)
-					this.setSelectedSong(this.mod(this.songs.length, this.selectedSong + this.state.move))
+					if(!isSkip){
+						this.playSound("se_ka", 0, this.lastMoveBy)
+					}
+					this.selectedSong = this.mod(this.songs.length, this.selectedSong + this.state.move)
 				}else{
 					var currentCat = this.songs[this.selectedSong].category
 					var currentIdx = this.mod(this.songs.length, this.selectedSong)
@@ -1304,7 +2202,7 @@ class SongSelect{
 						}
 					}
 
-					this.setSelectedSong(this.songs.indexOf(nextSong))
+					this.selectedSong = this.songs.indexOf(nextSong)
 					this.state.catJump = false
 				}
 
@@ -1320,6 +2218,11 @@ class SongSelect{
 					try{
 						localStorage["selectedSong"] = this.selectedSong
 					}catch(e){}
+				}
+				
+				if(this.songs[this.selectedSong].action !== "back"){
+					var cat = this.songs[this.selectedSong].originalCategory
+					this.drawBackground(cat)
 				}
 			}
 			if(this.state.moveMS && ms < this.state.moveMS + changeSpeed){
@@ -1408,7 +2311,7 @@ class SongSelect{
 					y: songTop,
 					song: this.songs[index],
 					highlight: highlight,
-					disabled: p2.session && this.songs[index].action && !this.songs[index].p2Enabled
+					disabled: p2.session && this.songs[index].action && this.songs[index].action !== "random"
 				})
 			}
 			var startFrom
@@ -1433,7 +2336,7 @@ class SongSelect{
 					y: songTop,
 					song: this.songs[index],
 					highlight: highlight,
-					disabled: p2.session && this.songs[index].action && !this.songs[index].p2Enabled
+					disabled: p2.session && this.songs[index].action && this.songs[index].action !== "random"
 				})
 			}
 		}
@@ -1491,7 +2394,7 @@ class SongSelect{
 			animateMS: Math.max(this.state.moveMS, this.state.mouseMoveMS),
 			cached: selectedWidth === this.songAsset.fullWidth ? 3 : (selectedWidth === this.songAsset.selectedWidth ? 2 : (selectedWidth === this.songAsset.width ? 1 : 0)),
 			frameCache: this.songFrameCache,
-			disabled: p2.session && currentSong.action && !currentSong.p2Enabled,
+			disabled: p2.session && currentSong.action && currentSong.action !== "random",
 			innerContent: (x, y, w, h) => {
 				ctx.strokeStyle = "#000"
 				if(screen === "title" || screen === "titleFadeIn" || screen === "song"){
@@ -1556,8 +2459,12 @@ class SongSelect{
 						})
 						
 						var text = this.diffOptions[i].text
-						if(this.diffOptions[i].iconName === "options" && (this.selectedDiff === i || this.state.options !== 0)){
-							text = this.optionsList[this.state.options]
+						if(this.diffOptions[i].iconName === "options" && (this.selectedDiff === i || this.getActiveModifierLabels().length)){
+							text = this.getOptionsSummary()
+						}
+						
+						if(this.diffOptions[i].iconName === "sounds" && (this.selectedDiff === i || this.state.sound !== 0)){
+							text = this.soundList[this.state.sound]
 						}
 						
 						this.draw.verticalText({
@@ -2062,11 +2969,13 @@ class SongSelect{
 						fontSize: 40,
 						fontFamily: this.font,
 						selectable: this.selectable,
-						selectableScale: this.ratio / this.pixelRatio,
-						selectableX: Math.max(0, innerWidth / 2 - lastHeight * 16 / 9)
+						selectableScale: this.ratio / this.pixelRatio
 					})
 					this.selectable.style.display = ""
 					this.selectableText = currentSong.title
+				}
+				if(!songSel && this.state.optionMenuOpen){
+					this.drawOptionsMenu(ctx)
 				}
 			}
 		})
@@ -2541,6 +3450,7 @@ class SongSelect{
 		var currentSong = this.songs[this.selectedSong]
 		var id = currentSong.id
 		var prvTime = currentSong.preview
+		this.loadTjaTitleMetadata(this.selectedSong)
 		this.endPreview()
 		
 		if("id" in currentSong){
@@ -2633,9 +3543,10 @@ class SongSelect{
 		var currentSong = this.songs[selectedSong]
 		var file = currentSong.chart
 		var importSongs = new ImportSongs(false, assets.otherFiles)
-		return file.read(currentSong.type === "tja" ? "sjis" : "").then(data => {
+		var isTja = this.isTjaSong(currentSong)
+		return file.read(isTja ? "sjis" : "").then(data => {
 			currentSong.chart = new CachedFile(data, file)
-			return importSongs[currentSong.type === "tja" ? "addTja" : "addOsu"]({
+			return importSongs[isTja ? "addTja" : "addOsu"]({
 				file: currentSong.chart,
 				index: currentSong.id
 			})
@@ -2661,8 +3572,8 @@ class SongSelect{
 		})
 	}
 	addSong(song){
-		var title = this.getLocalTitle(song.title, song.title_lang)
-		var subtitle = this.getLocalTitle(title === song.title ? song.subtitle : "", song.subtitle_lang)
+		var title = this.getSongTitle(song)
+		var subtitle = this.getSongSubtitle(song, title)
 		var skin = null
 		var categoryName = ""
 		var originalCategory = ""
@@ -2695,8 +3606,520 @@ class SongSelect{
 		return addedSong
 	}
 	
+	
+	createSearchResult(result, resultWidth, fontSize){
+		var song = result.obj
+		var title = this.getSongTitle(song)
+		var subtitle = this.getSongSubtitle(song, title)
+
+		var id = "default"
+		if(song.category_id){
+			var cat = assets.categories.find(cat => cat.id === song.category_id)
+			if(cat && "id" in cat){
+				id = "cat" + cat.id
+			}
+		}
+
+		var resultDiv = document.createElement("div")
+		resultDiv.classList.add("song-search-result", "song-search-" + id)
+		resultDiv.dataset.songId = song.id
+
+		var resultInfoDiv = document.createElement("div")
+		resultInfoDiv.classList.add("song-search-result-info")
+		var resultInfoTitle = document.createElement("span")
+		resultInfoTitle.classList.add("song-search-result-title")
+
+		resultInfoTitle.appendChild(this.highlightResult(title, result[0]))
+		resultInfoTitle.setAttribute("alt", title)
+
+		resultInfoDiv.appendChild(resultInfoTitle)
+
+		if(subtitle){
+			resultInfoDiv.appendChild(document.createElement("br"))
+			var resultInfoSubtitle = document.createElement("span")
+			resultInfoSubtitle.classList.add("song-search-result-subtitle")
+
+			resultInfoSubtitle.appendChild(this.highlightResult(subtitle, result[1]))
+			resultInfoSubtitle.setAttribute("alt", subtitle)
+
+			resultInfoDiv.appendChild(resultInfoSubtitle)
+		}
+
+		resultDiv.appendChild(resultInfoDiv)
+
+		var courses = ["easy", "normal", "hard", "oni", "ura"]
+		courses.forEach(course => {
+			var courseDiv = document.createElement("div")
+			courseDiv.classList.add("song-search-result-course", "song-search-result-" + course)
+			if (song.courses[course]) {
+				var crown = "noclear"
+				if (scoreStorage.scores[song.hash]) {
+					if (scoreStorage.scores[song.hash][course]) {
+						crown = scoreStorage.scores[song.hash][course].crown || "noclear"
+					}
+				}
+				var courseCrown = document.createElement("div")
+				courseCrown.classList.add("song-search-result-crown", "song-search-result-" + crown)
+				var courseStars = document.createElement("div")
+				courseStars.classList.add("song-search-result-stars")
+				courseStars.innerText = song.courses[course].stars + '★'
+
+				courseDiv.appendChild(courseCrown)
+				courseDiv.appendChild(courseStars)
+			} else {
+				courseDiv.classList.add("song-search-result-hidden")
+			}
+
+			resultDiv.appendChild(courseDiv)
+		})
+
+		this.ctx.font = (1.2 * fontSize) + "px " + strings.font
+		var titleWidth = this.ctx.measureText(title).width
+		var titleRatio = resultWidth / titleWidth
+		if(titleRatio < 1){
+			resultInfoTitle.style.transform = "scale(" + titleRatio + ", 1)"
+		}
+		if(subtitle){
+			this.ctx.font =  (0.8 * 1.2 * fontSize) + "px " + strings.font
+			var subtitleWidth = this.ctx.measureText(subtitle).width
+			var subtitleRatio = resultWidth / subtitleWidth
+			if(subtitleRatio < 1){
+				resultInfoSubtitle.style.transform = "scale(" + subtitleRatio + ", 1)"
+			}
+		}
+
+		return resultDiv
+	}
+
+	highlightResult(text, result){
+		var fragment = document.createDocumentFragment()
+		var ranges = (result ? result.ranges : null) || []
+		var lastIdx = 0
+		ranges.forEach(range => {
+			if(lastIdx !== range[0]){
+				fragment.appendChild(document.createTextNode(text.slice(lastIdx, range[0])))
+			}
+			var span = document.createElement("span")
+			span.classList.add("highlighted-text")
+			span.innerText = text.slice(range[0], range[1] + 1)
+			fragment.appendChild(span)
+			lastIdx = range[1] + 1
+		})
+		if(text.length !== lastIdx){
+			fragment.appendChild(document.createTextNode(text.slice(lastIdx)))
+		}
+		return fragment
+	}
+
+	searchSetActive(idx){
+		this.playSound("se_ka")
+		var active = this.search.div.querySelector(":scope .song-search-result-active")
+		if(active){
+			active.classList.remove("song-search-result-active")
+		}
+
+		if(idx === null){
+			this.search.active = null
+			return			
+		}
+
+		var el = this.search.results[idx]
+		this.search.input.blur()
+		el.classList.add("song-search-result-active")
+		this.scrollTo(el)
+
+		this.search.active = idx
+	}
+
+	scrollTo(element){
+		var parentNode = element.parentNode
+		var selected = element.getBoundingClientRect()
+		var parent = parentNode.getBoundingClientRect()
+		var scrollY = parentNode.scrollTop
+		var selectedPosTop = selected.top - selected.height / 2
+		if(Math.floor(selectedPosTop) < Math.floor(parent.top)){
+			parentNode.scrollTop += selectedPosTop - parent.top
+		}else{
+			var selectedPosBottom = selected.top + selected.height * 1.5 - parent.top
+			if(Math.floor(selectedPosBottom) > Math.floor(parent.height)){
+				parentNode.scrollTop += selectedPosBottom - parent.height
+			}
+		}
+	}
+
+	displaySearch(fromButton=false){
+		if(this.search){
+			return this.removeSearch(true)
+		}
+
+		this.search = {results: []}
+		this.search.div = document.createElement("div")
+		this.search.div.innerHTML = assets.pages["search"]
+
+		this.searchContainer = this.search.div.querySelector(":scope #song-search-container")
+		if(this.touchEnabled){
+			this.searchContainer.classList.add("touch-enabled")
+		}
+		pageEvents.add(this.searchContainer, ["mousedown", "touchstart"], this.searchClick.bind(this))
+
+		this.search.input = this.search.div.querySelector(":scope #song-search-input")
+		this.search.input.setAttribute("placeholder", strings.search.searchInput)
+		pageEvents.add(this.search.input, ["input"], this.searchInput.bind(this))
+
+		this.playSound("se_pause")
+		loader.screen.appendChild(this.search.div)
+		this.setSearchTip()
+		cancelTouch = false
+		noResizeRoot = true
+		if(this.songs[this.selectedSong].courses){
+			snd.previewGain.setVolumeMul(0.5)
+		}else if(this.bgmEnabled){
+			snd.musicGain.setVolumeMul(0.5)
+		}
+
+		setTimeout(() => {
+			this.search.input.focus()
+			this.search.input.setSelectionRange(0, this.search.input.value.length)
+		}, 10)
+
+		var lastQuery = localStorage.getItem("lastSearchQuery")
+		if(lastQuery){
+			this.search.input.value = lastQuery
+			this.search.input.dispatchEvent(new Event('input', {value: lastQuery}))
+		}
+	}
+
+	removeSearch(byUser=false){
+		if(this.search){
+			if(byUser){
+				this.playSound("se_cancel")
+			}
+
+			pageEvents.remove(this.search.div.querySelector(":scope #song-search-container"),
+			["mousedown", "touchstart"])
+			pageEvents.remove(this.search.input, ["input"])
+
+			this.search.div.remove()
+			delete this.search
+			cancelTouch = true
+			noResizeRoot = false
+			if(this.songs[this.selectedSong].courses){
+				snd.previewGain.setVolumeMul(1)
+			}else if(this.bgmEnabled){
+				snd.musicGain.setVolumeMul(1)
+			}
+		}
+	}
+
+	setSearchTip(tip, error=false){
+		if(this.search.tip){
+			this.search.tip.remove()
+			delete this.search.tip
+		}
+
+		if(!tip){
+			tip = strings.search.tip + " " + strings.search.tips[Math.floor(Math.random() * strings.search.tips.length)]
+		}
+
+		var resultsDiv = this.search.div.querySelector(":scope #song-search-results")
+		resultsDiv.innerHTML = ""
+		this.search.results = []
+
+		this.search.tip = document.createElement("div")
+		this.search.tip.setAttribute("id", "song-search-tip")
+		this.search.tip.innerText = tip
+		this.search.div.querySelector(":scope #song-search").appendChild(this.search.tip)
+
+		if(error){
+			this.search.tip.classList.add("song-search-tip-error")
+		}
+	}
+
+	parseRange(string){
+		var range = string.split("-")
+		if(range.length == 1){
+			var min = parseInt(range[0]) || 0
+			return min > 0 ? {min: min, max: min} : false
+		} else if(range.length == 2){
+			var min = parseInt(range[0]) || 0
+			var max = parseInt(range[1]) || 0
+			return min > 0 && max > 0 ? {min: min, max: max} : false
+		}
+	}
+
+	performSearch(query){
+		var results = []
+		var filters = {}
+
+		var querySplit = query.split(" ")
+		var editedSplit = query.split(" ")
+		querySplit.forEach(word => {
+			if(word.length > 0){
+				var parts = word.toLowerCase().split(":")
+				if(parts.length > 1){
+					switch(parts[0]){
+						case "easy":
+						case "normal":
+						case "hard":
+						case "oni":
+						case "ura":
+							var range = this.parseRange(parts[1])
+							if (range) { filters[parts[0]] = range }
+							break
+						case "extreme":
+							var range = this.parseRange(parts[1])
+							if (range) { filters.oni = this.parseRange(parts[1]) }
+							break
+						case "clear":
+						case "silver":
+						case "gold":
+						case "genre":
+						case "lyrics":
+						case "creative":
+						case "played":
+						case "maker":
+						case "diverge":
+							filters[parts[0]] = parts[1]
+							break
+					}
+
+					editedSplit.splice(editedSplit.indexOf(word), 1)
+				}
+			}
+		})
+
+		query = editedSplit.join(" ").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+
+		var totalFilters = Object.keys(filters).length
+		for(var i = 0; i < assets.songs.length; i++){
+			var song = assets.songs[i]
+			var passedFilters = 0
+
+			Object.keys(filters).forEach(filter => {
+				var value = filters[filter]
+				switch(filter){
+					case "easy":
+					case "normal":
+					case "hard":
+					case "oni":
+					case "ura":
+						if(song.courses[filter] && song.courses[filter].stars >= value.min && song.courses[filter].stars <= value.max){
+							passedFilters++
+						}
+						break
+					case "clear":
+					case "silver":
+					case "gold":
+						if(value === "any"){
+							var score = scoreStorage.scores[song.hash]
+							scoreStorage.difficulty.forEach(difficulty => {
+								if(score && score[difficulty] && score[difficulty].crown && (filter === "clear" || score[difficulty].crown === filter)){
+									passedFilters++
+								}
+							})
+						} else {
+							var score = scoreStorage.scores[song.hash]
+							if(score && score[value] && score[value].crown && (filter === "clear" || score[value].crown === filter)){
+								passedFilters++
+							}
+						}
+						break
+					case "played":
+						var score = scoreStorage.scores[song.hash]
+						if((value === "yes" && score) || (value === "no" && !score)){
+							passedFilters++
+						}
+						break
+					case "lyrics":
+						if((value === "yes" && song.lyrics) || (value === "no" && !song.lyrics)){
+							passedFilters++
+						}
+						break
+					case "creative":
+						if((value === "yes" && song.maker) || (value === "no" && !song.maker)){
+							passedFilters++
+						}
+						break
+					case "maker":
+						if(song.maker && song.maker.name.toLowerCase().includes(value.toLowerCase())){
+							passedFilters++
+						}
+						break
+					case "genre":
+						var cat = assets.categories.find(cat => cat.id === song.category_id)
+						var aliases = cat.aliases ? cat.aliases.concat([cat.title]) : [cat.title]
+
+						if(aliases.find(alias => alias.toLowerCase() === value.toLowerCase())){
+							passedFilters++
+						}
+						break
+						case "diverge":
+							var branch = Object.values(song.courses).find(course => course && course.branch)
+							if((value === "yes" && branch) || (value === "no" && !branch)){
+								passedFilters++
+							}
+						break
+				}
+			})
+
+			if(passedFilters === totalFilters){
+				results.push(song)
+			}
+		}
+
+		var maxResults = totalFilters > 0 && !query ? 100 : 50
+
+		if(query){
+			results = fuzzysort.go(query, results, {
+				keys: ["titlePrepared", "subtitlePrepared"],
+				allowTypo: true,
+				limit: maxResults,
+				scoreFn: a => {
+					if(a[0]){
+						var score0 = a[0].score
+						a[0].ranges = this.indexesToRanges(a[0].indexes)
+						if(a[0].indexes.length > 1){
+							var rangeAmount = a[0].ranges.length
+							var lastIdx = -3
+							a[0].ranges.forEach(range => {
+								if(range[0] - lastIdx <= 2){
+									rangeAmount--
+									score0 -= 1000
+								}
+								lastIdx = range[1]
+							})
+							var index = a[0].target.toLowerCase().indexOf(query)
+							if(index !== -1){
+								a[0].ranges = [[index, index + query.length - 1]]
+							}else if(rangeAmount > a[0].indexes.length / 2){
+								score0 = -Infinity
+								a[0].ranges = null
+							}else if(rangeAmount !== 1){
+								score0 -= 9000
+							}
+						}
+					}
+					if(a[1]){
+						var score1 = a[1].score - 1000
+						a[1].ranges = this.indexesToRanges(a[1].indexes)
+						if(a[1].indexes.length > 1){
+							var rangeAmount = a[1].ranges.length
+							var lastIdx = -3
+							a[1].ranges.forEach(range => {
+								if(range[0] - lastIdx <= 2){
+									rangeAmount--
+									score1 -= 1000
+								}
+								lastIdx = range[1]
+							})
+							var index = a[1].target.indexOf(query)
+							if(index !== -1){
+								a[1].ranges = [[index, index + query.length - 1]]
+							}else if(rangeAmount > a[1].indexes.length / 2){
+								score1 = -Infinity
+								a[1].ranges = null
+							}else if(rangeAmount !== 1){
+								score1 -= 9000
+							}
+						}
+					}
+					if(a[0]){
+						return a[1] ? Math.max(score0, score1) : score0
+					}else{
+						return a[1] ? score1 : -Infinity
+					}
+				}
+			})
+		}else{
+			results = results.map(result => {
+				return {obj: result}
+			}).slice(0, maxResults)
+		}
+
+		return results
+	}
+
+	indexesToRanges(indexes){
+		var ranges = []
+		var range
+		indexes.forEach(idx => {
+			if(range && range[1] === idx - 1){
+				range[1] = idx
+			}else{
+				range = [idx, idx]
+				ranges.push(range)
+			}
+		})
+		return ranges
+	}
+
+	searchInput(){
+		var text = this.search.input.value
+		localStorage.setItem("lastSearchQuery", text)
+		text = text.toLowerCase()
+
+		if(text.length === 0){
+			this.setSearchTip()
+			return
+		}
+
+		var new_results = this.performSearch(text)
+
+		if (new_results.length === 0) {
+			this.setSearchTip(strings.search.noResults, true)
+			return
+		} else if (this.search.tip) {
+			this.search.tip.remove()
+			delete this.search.tip
+		}
+
+		var resultsDiv = this.search.div.querySelector(":scope #song-search-results")
+		resultsDiv.innerHTML = ""
+		this.search.results = []
+
+		var fontSize = parseFloat(getComputedStyle(this.search.div.querySelector(":scope #song-search")).fontSize.slice(0, -2))
+		var resultsWidth = parseFloat(getComputedStyle(resultsDiv).width.slice(0, -2))
+		var vmin = Math.min(innerWidth, lastHeight) / 100
+		var courseWidth = Math.min(3 * fontSize * 1.2, 7 * vmin)
+		var resultWidth = resultsWidth - 1.8 * fontSize - 0.8 * fontSize - (courseWidth + 0.4 * fontSize * 1.2) * 5 - 0.6 * fontSize
+
+		this.ctx.save()
+
+		var fragment = document.createDocumentFragment()
+		new_results.forEach(result => {
+			var result = this.createSearchResult(result, resultWidth, fontSize)
+			fragment.appendChild(result)
+			this.search.results.push(result)
+		})
+		resultsDiv.appendChild(fragment)
+
+		this.ctx.restore()
+	}
+
+	searchClick(e){
+		if((e.target.id === "song-search-container" || e.target.id === "song-search-close") && e.which === 1){
+			this.removeSearch(true)
+		}else if(e.which === 1){
+			var songEl = e.target.closest(".song-search-result")
+			if(songEl){
+				var songId = parseInt(songEl.dataset.songId)
+				this.searchProceed(songId)
+			}
+		}
+	}
+
+	searchProceed(songId){
+		var song = this.songs.find(song => song.id === songId)
+		this.removeSearch()
+		this.playBgm(false)
+		this.drawBackground(song.originalCategory)
+
+		var songIndex = this.songs.findIndex(song => song.id === songId)
+		this.selectedSong = songIndex
+		this.toSelectDifficulty()
+	}
+
 	onusers(response){
-		var p2InSong = false
 		this.songs.forEach(song => {
 			song.p2Cursor = null
 		})
@@ -2717,22 +4140,15 @@ class SongSelect{
 					if(currentSong){
 						currentSong.p2Cursor = diffId
 						if(p2.session && currentSong.courses){
-							this.setSelectedSong(index)
+							this.selectedSong = index
 							this.state.move = 0
 							if(this.state.screen !== "difficulty"){
 								this.toSelectDifficulty({player: response.value.player})
 							}
-							this.search.enabled = false
-							p2InSong = true
-							this.search.remove()
 						}
 					}
 				}
 			})
-		}
-
-		if(!this.search.enabled && !p2InSong){
-			this.search.enabled = true
 		}
 	}
 	onsongsel(response){
@@ -2741,16 +4157,13 @@ class SongSelect{
 			if(response.type === "songsel" && "selected" in response.value){
 				selected = response.value.selected
 			}
-			if("fromRandom" in response.value && response.value.fromRandom === true){
-				this.lastRandom = true
-			}
 			if("song" in response.value){
 				var song = +response.value.song
 				if(song >= 0 && song < this.songs.length){
 					if(response.type === "catjump"){
 						var moveBy = response.value.move
 						if(moveBy === -1 || moveBy === 1){
-							this.setSelectedSong(song)
+							this.selectedSong = song
 							this.categoryJump(moveBy, {player: response.value.player})
 						}
 					}else if(!selected){
@@ -2771,10 +4184,9 @@ class SongSelect{
 							this.moveToSong(moveBy, {player: response.value.player})
 						}
 					}else if(this.songs[song].courses){
-						this.setSelectedSong(song)
+						this.selectedSong = song
 						this.state.move = 0
 						if(this.state.screen !== "difficulty"){
-							this.playBgm(false)
 							this.toSelectDifficulty({player: response.value.player})
 						}
 					}
@@ -2859,7 +4271,6 @@ class SongSelect{
 		this.sessionCache.clean()
 		this.currentSongCache.clean()
 		this.nameplateCache.clean()
-		this.search.clean()
 		assets.sounds["bgm_songsel"].stop()
 		if(!this.bgmEnabled){
 			snd.musicGain.fadeIn()
@@ -2881,8 +4292,11 @@ class SongSelect{
 			pageEvents.remove(this.touchFullBtn, "click")
 			delete this.touchFullBtn
 		}
+		loader.screen.removeChild(this.searchStyle)
 		delete this.selectable
 		delete this.ctx
 		delete this.canvas
+		delete this.searchContainer
+		delete this.searchStyle
 	}
 }

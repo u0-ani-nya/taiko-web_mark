@@ -100,6 +100,28 @@ class Scoresheet{
 			touchEvents: controller.view.touchEvents
 		})
 	}
+	getControllerForPlayer(player){
+		if(this.multiplayer && player !== this.player[0]){
+			return this.controller.syncWith || this.controller
+		}
+		return this.controller
+	}
+	getBadgeNames(player){
+		var controller = this.getControllerForPlayer(player)
+		var badges = controller.getModBadges ? controller.getModBadges() : []
+		badges = badges.slice()
+		if(controller.autoPlayEnabled && !this.multiplayer){
+			badges.unshift("badge_auto")
+		}
+		return badges.filter(name => assets.image[name])
+	}
+	drawModBadges(ctx, x, y, size, player){
+		var badges = this.getBadgeNames(player)
+		var gap = Math.max(2, Math.round(size * 0.12))
+		badges.forEach((name, i) => {
+			ctx.drawImage(assets.image[name], x + i * (size + gap), y, size, size)
+		})
+	}
 	keyDown(pressed){
 		if(pressed && this.redrawing){
 			this.toNext()
@@ -348,8 +370,17 @@ class Scoresheet{
 		}else{
 			var elapsed = 0
 		}
-		
+
 		var rules = this.controller.game.rules
+
+		var showAdlib = false
+		for(var p = 0; p < players; p++){
+			var results = this.results[p]
+			if(results && Number(results.adlib) > 0){
+				showAdlib = true
+			}
+		}
+
 		var failedOffset = rules.clearReached(this.results[this.player[0]].gauge) ? 0 : -2000
 		if(players === 2 && failedOffset !== 0){
 			var p2results = this.results[this.player[1]]
@@ -493,11 +524,7 @@ class Scoresheet{
 						})
 					})
 					
-					if(this.controller.autoPlayEnabled){
-						ctx.drawImage(assets.image["badge_auto"],
-							431, 311, 34, 34
-						)
-					}
+					this.drawModBadges(ctx, 431, 311, 34, p)
 					
 					this.draw.roundedRect({
 						ctx: ctx,
@@ -607,6 +634,15 @@ class Scoresheet{
 						{outline: "#000", letterBorder: 8},
 						{fill: "#ffc700"}
 					])
+					if(showAdlib){
+						this.draw.score({
+							ctx: ctx,
+							score: "adlib",
+							x: 1149,
+							y: 273,
+							results: true
+						})
+					}
 				}
 				ctx.restore()
 			})
@@ -682,7 +718,7 @@ class Scoresheet{
 				}
 				var crownType = null
 				if(this.rules[p].clearReached(results.gauge)){
-					crownType = results.bad === "0" ? "gold" : "silver"
+					crownType = results.bad === "0" ? (results.ok === "0" ? "rainbow" : "gold") : "silver"
 				}
 				if(crownType !== null){
 					noCrownResultWait = 0;
@@ -709,7 +745,7 @@ class Scoresheet{
 						}
 						if(this.state.screen === "fadeIn" && elapsed >= 1200 && !this.state["fullcomboPlayed" + p]){
 							this.state["fullcomboPlayed" + p] = true
-							if(crownType === "gold"){
+							if(crownType === "gold" || crownType === "rainbow"){ // TODO: sound effect of donder full combo
 								this.playSound("v_results_fullcombo" + (p === 1 ? "2" : ""), p)
 							}
 						}
@@ -740,6 +776,9 @@ class Scoresheet{
 			ctx.translate(frameLeft, frameTop)
 			
 			var printNumbers = ["good", "ok", "bad", "maxCombo", "drumroll"]
+			if(showAdlib){
+				printNumbers.push("adlib")
+			}
 			if(!this.state["countupTime0"]){
 				var times = {}
 				var lastTime = 0
@@ -761,7 +800,8 @@ class Scoresheet{
 							continue
 						}
 						times[printNumbers[i]] = lastTime + 500
-						var currentTime = lastTime + 500 + results[printNumbers[i]].length * 30 * this.frame
+						var resultsNumber = this.getResultValue(results, printNumbers[i])
+						var currentTime = lastTime + 500 + resultsNumber.length * 30 * this.frame
 						if(currentTime > largestTime){
 							largestTime = currentTime
 						}
@@ -807,16 +847,17 @@ class Scoresheet{
 					var lastTime = 3100 + noCrownResultWait + results.points.length * 30 * this.frame + 1000
 					for(var i in printNumbers){
 						times[printNumbers[i]] = lastTime + 500
-						lastTime = lastTime + 500 + results[printNumbers[i]].length * 30 * this.frame
+						lastTime = lastTime + 500 + this.getResultValue(results, printNumbers[i]).length * 30 * this.frame
 					}
 					this.state["countupTime" + p] = times
 				}
 				
 				for(var i in printNumbers){
 					var start = this.state["countupTime" + p][printNumbers[i]]
+					var resultsNumber = this.getResultValue(results, printNumbers[i])
 					this.draw.layeredText({
 						ctx: ctx,
-						text: this.getNumber(results[printNumbers[i]], start, elapsed),
+						text: this.getNumber(resultsNumber, start, elapsed),
 						x: 971 + 270 * Math.floor(i / 3),
 						y: 196 + (40 * (i % 3)),
 						fontSize: 26,
@@ -880,6 +921,19 @@ class Scoresheet{
 		ctx.restore()
 	}
 	
+	getResultValue(results, name){
+		var value = results && results[name]
+		if(name === "adlib"){
+			var hit = Number(value) || 0
+			var total = Number(results && results.adlibTotal) || 0
+			if(total > 0){
+				var percentage = Math.floor(hit / total * 100)
+				return hit.toString() + " " + percentage.toString() + "%"
+			}
+		}
+		return (value === undefined || value === null ? 0 : value).toString()
+	}
+
 	getNumber(score, start, elapsed){
 		var numberPos = Math.floor((elapsed - start) / this.frame)
 		if(numberPos < 0){
@@ -930,10 +984,10 @@ class Scoresheet{
 			var clearReached = this.controller.game.rules.clearReached(this.resultsObj.gauge)
 			var crown = ""
 			if(clearReached){
-				crown = this.resultsObj.bad === 0 ? "gold" : "silver"
+				crown = this.resultsObj.bad === 0 ? (this.resultsObj.ok === 0 ? "rainbow" : "gold") : "silver"
 			}
 			if(!oldScore || oldScore.points <= this.resultsObj.points){
-				if(oldScore && (oldScore.crown === "gold" || oldScore.crown === "silver" && !crown)){
+				if(oldScore && (oldScore.crown === "rainbow" || oldScore.crown === "gold" && (crown === "silver" || !crown) || oldScore.crown === "silver" && !crown)){
 					crown = oldScore.crown
 				}
 				this.resultsObj.crown = crown
@@ -943,7 +997,7 @@ class Scoresheet{
 				scoreStorage.add(hash, difficulty, this.resultsObj, true, title).catch(() => {
 					this.showWarning = {name: "scoreSaveFailed"}
 				})
-			}else if(oldScore && (crown === "gold" && oldScore.crown !== "gold" || crown && !oldScore.crown)){
+			}else if(oldScore && ((crown === "rainbow" && oldScore.crown !== "rainbow") || crown === "gold" && (oldScore.crown === "silver"  ||!oldScore.crown) || crown && !oldScore.crown)){
 				oldScore.crown = crown
 				scoreStorage.add(hash, difficulty, oldScore, true, title).catch(() => {
 					this.showWarning = {name: "scoreSaveFailed"}

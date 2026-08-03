@@ -1,2 +1,7 @@
 /data
 /public/songs
+/public/assets/img
+/public/assets/audio
+/public/assets/fonts
+/public/assets/video
+.backup/
