@@ -7,7 +7,11 @@
 		this.context = new AudioContext()
 		this.audioDecoder = this.context.decodeAudioData.bind(this.context)
 		this.oggDecoder = this.audioDecoder
-		pageEvents.add(window, ["click", "touchend", "keypress"], this.pageClicked.bind(this))
+		this.pageClickHandler = this.pageClicked.bind(this)
+		this.resumeEvents = ["click", "mousedown", "pointerdown", "touchstart", "touchend", "keydown", "keypress"]
+		this.resumeEvents.forEach(type => {
+			window.addEventListener(type, this.pageClickHandler)
+		})
 		this.gainList = []
 	}
 	load(file, gain){
@@ -238,6 +242,33 @@ class Sound{
 			}else{
 				this.play(time, absolute, this.cfg.pauseSeek, this.cfg.until)
 			}
+		}
+	}
+	warmup(){
+		if(this.warmed || !this.buffer){
+			return
+		}
+		this.warmed = true
+		var context = this.soundBuffer.context
+		var source = context.createBufferSource()
+		var gain = context.createGain()
+		gain.gain.value = 0
+		gain.connect(context.destination)
+		source.buffer = this.buffer
+		source.connect(gain)
+		source.onended = () => {
+			try{
+				source.disconnect()
+				gain.disconnect()
+			}catch(e){}
+		}
+		try{
+			source.start(context.currentTime, 0, Math.min(0.001, this.duration || 0.001))
+		}catch(e){
+			try{
+				source.disconnect()
+				gain.disconnect()
+			}catch(e){}
 		}
 	}
 	clean(){

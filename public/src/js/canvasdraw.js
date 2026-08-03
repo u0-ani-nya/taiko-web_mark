@@ -1,4 +1,4 @@
-﻿class CanvasDraw{
+class CanvasDraw{
 	constructor(...args){
 		this.init(...args)
 	}
@@ -94,6 +94,7 @@
 		this.songFrameCache = new CanvasCache(noSmoothing)
 		this.diffStarCache = new CanvasCache(noSmoothing)
 		this.crownCache = new CanvasCache(noSmoothing)
+		this.gaugeRainbowStart = {}
 		
 		this.tmpCanvas = document.createElement("canvas")
 		this.tmpCtx = this.tmpCanvas.getContext("2d")
@@ -1240,7 +1241,7 @@
 		}
 		ctx.strokeStyle = "#000"
 		ctx.lineWidth = 7
-		if(strings.good === "良"){
+		if(strings.good === "良" && config.score !== "adlib"){
 			if(config.align === "center"){
 				ctx.translate(config.score === "bad" ? -49 / 2 : -23 / 2, 0)
 			}
@@ -1296,6 +1297,14 @@
 				ctx.fillStyle = grd
 				ctx.strokeText(strings.bad, 0, 4)
 				ctx.fillText(strings.bad, 0, 4)
+			}else if(config.score === "adlib"){
+				if(config.results){
+					ctx.textAlign = "right"
+				}
+				ctx.strokeStyle = "#ef9100"
+				ctx.fillStyle = "#fff"
+				ctx.strokeText(strings.adlib, 0, 4)
+				ctx.fillText(strings.adlib, 0, 4)
 			}
 		}
 		ctx.restore()
@@ -1512,6 +1521,58 @@
 			])
 		}
 		
+		this.drawGaugeRainbow(ctx, config)
+		
+		ctx.restore()
+	}
+	
+	getGaugeRainbowImage(config){
+		if(config.clear <= 31 / 50){
+			return assets.image["yatai_gauge_rainbow_easy"]
+		}else if(config.clear <= 36 / 50){
+			return assets.image["yatai_gauge_rainbow_normal"]
+		}
+		return assets.image["yatai_gauge_rainbow_hard"]
+	}
+	
+	drawGaugeRainbow(ctx, config){
+		var img = this.getGaugeRainbowImage(config)
+		if(!img || !img.complete || !img.naturalWidth){
+			return
+		}
+		
+		var key = [
+			config.scoresheet ? "result" : "game",
+			config.multiplayer ? "p2" : "p1",
+			config.blue ? "blue" : "red"
+		].join("-")
+		var full = config.percentage >= 1
+		var now = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now()
+		if(full){
+			if(this.gaugeRainbowStart[key] == null){
+				this.gaugeRainbowStart[key] = now
+			}
+		}else{
+			delete this.gaugeRainbowStart[key]
+			return
+		}
+		
+		var elapsed = now - this.gaugeRainbowStart[key]
+		var fade = Math.min(1, elapsed / 166)
+		var frameProgress = (elapsed / 75) % 8
+		var frameA = Math.floor(frameProgress)
+		var frameB = (frameA + 1) % 8
+		var t = frameProgress - frameA
+		var dx = -6
+		var dy = config.multiplayer ? -8 : -8
+		var dw = 712
+		var dh = 64
+		
+		ctx.save()
+		ctx.globalAlpha *= fade
+		ctx.drawImage(img, 0, frameA * dh, dw, dh, dx, dy, dw, dh)
+		ctx.globalAlpha *= t
+		ctx.drawImage(img, 0, frameB * dh, dw, dh, dx, dy, dw, dh)
 		ctx.restore()
 	}
 	
