@@ -340,7 +340,7 @@ class SongSelect{
 			optionMenuOpen: false,
 			optionMenuRow: 0,
 			optionMenuHoverRow: null,
-			sound: 0,
+			sound: this.getSavedSound(),
 			selLock: false,
 			catJump: false,
 			focused: true,
@@ -1786,6 +1786,16 @@ class SongSelect{
 			this.playSound("se_ka", 0, p2.session ? p2.player : false)
 			this.selectedDiff = this.diffOptions.findIndex(o => o.iconName === "sounds")
 			this.state.sound = this.mod(this.soundList.length, this.state.sound + moveBy)
+			try{
+				localStorage.setItem("vOneLocalStorage", this.state.sound + 1)
+			}catch(e){}
+	}
+	getSavedSound(){
+		var sound = parseInt(localStorage.getItem("vOneLocalStorage"), 10)
+		if(!sound || sound < 1){
+			return 0
+		}
+		return Math.min(this.soundList.length, sound - 1)
 	}
 	toTitleScreen(){
 		if(!p2.session){
