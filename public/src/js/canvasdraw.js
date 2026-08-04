@@ -1491,6 +1491,8 @@ class CanvasDraw{
 			ctx.fillRect(gaugeClear, secondTop, 10, 3)
 			ctx.restore()
 		}
+		this.drawGaugeRainbow(ctx, config)
+
 		
 		ctx.strokeStyle = "rgba(0, 0, 0, 0.16)"
 		ctx.beginPath()
@@ -1520,8 +1522,6 @@ class CanvasDraw{
 				{scale: [1.11, 1], fill: cleared ? "#fff" : "#737373"}
 			])
 		}
-		
-		this.drawGaugeRainbow(ctx, config)
 		
 		ctx.restore()
 	}
