@@ -1784,7 +1784,7 @@ class SongSelect{
 	}
 	toSound(moveBy){
 			this.playSound("se_ka", 0, p2.session ? p2.player : false)
-			this.selectedDiff = 2
+			this.selectedDiff = this.diffOptions.findIndex(o => o.iconName === "sounds")
 			this.state.sound = this.mod(this.soundList.length, this.state.sound + moveBy)
 	}
 	toTitleScreen(){
