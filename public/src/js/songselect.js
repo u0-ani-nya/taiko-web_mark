@@ -1789,6 +1789,17 @@ class SongSelect{
 			try{
 				localStorage.setItem("vOneLocalStorage", this.state.sound + 1)
 			}catch(e){}
+			this.previewSound()
+	}
+	previewSound(){
+			var id = this.state.sound + 1
+			var prefix = "neiro_" + id + "_"
+			if(assets.sounds[prefix + "don"]){
+				assets.sounds[prefix + "don"].play()
+			}
+			if(assets.sounds[prefix + "ka"]){
+				assets.sounds[prefix + "ka"].play(0.15)
+			}
 	}
 	getSavedSound(){
 		var sound = parseInt(localStorage.getItem("vOneLocalStorage"), 10)
