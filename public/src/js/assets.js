@@ -139,6 +139,20 @@ var assets = {
 		"tja_balloon_chara_miss.png",
 		"tja_hit_fireworks_keyed.png"
 	],
+	"cssBackground": {
+		"#title-screen": "title-screen.png",
+		"#loading-don": "dancing-don.gif",
+		".pattern-bg": "bg-pattern-1.png",
+		".song-search-result-course::before": "difficulty.png",
+		"#song-select": "bg_genre_def.png",
+		".settings-outer": "bg_settings.png",
+		"#touch-pause-btn": "touch_pause.png",
+		"#touch-full-btn": "touch_fullscreen.png",
+		"#gamepad-bg, #gamepad-buttons": "settings_gamepad.png",
+		".song-search-result-crown": "crown.png",
+		".song-search-tip-error": "miss.png",
+		"#song-search": "bg_search.png"
+	},
 	"audioSfx": [
 		"se_pause.ogg",
 		"se_calibration.ogg",
