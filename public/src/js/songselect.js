@@ -193,12 +193,13 @@ class SongSelect{
 			action: "settings",
 			category: strings.gameSettings
 		})
-		this.songs.push({
+		this.announcementSong = {
 			title: strings.announcement.announcement,
 			skin: this.songSkin.announcement,
 			action: "announcement",
 			category: strings.announcement.announcement
-		})
+		}
+		this.songs.push(this.announcementSong)
 		
 		var showCustom = false
 		if(gameConfig.google_credentials.gdrive_enabled){
@@ -4217,6 +4218,7 @@ class SongSelect{
 		}
 		var ids = this.announcements.map(a => a.id)
 		this.setAnnouncementRead(ids)
+		this.updateAnnouncementSongTitle()
 		if(this.announcement){
 			this.renderAnnouncementList()
 		}
@@ -4236,6 +4238,18 @@ class SongSelect{
 		}
 		var read = this.getAnnouncementRead()
 		return this.announcements.filter(a => read.indexOf(a.id) === -1).length
+	}
+
+	updateAnnouncementSongTitle(){
+		if(!this.announcementSong){
+			return
+		}
+		var newCount = this.getNewAnnouncementCount()
+		var baseTitle = strings.announcement.announcement
+		this.announcementSong.title = newCount > 0 ? baseTitle + " (" + newCount + ")" : baseTitle
+		if(this.redrawRunning){
+			this.redraw()
+		}
 	}
 
 	loadAnnouncements(){
@@ -4271,6 +4285,7 @@ class SongSelect{
 				})
 				self.announcements = announcements
 				self.announcementsError = false
+				self.updateAnnouncementSongTitle()
 				if(self.announcement){
 					self.renderAnnouncementList()
 				}
@@ -4313,6 +4328,7 @@ class SongSelect{
 				announcement.body = body || "<p>...</p>"
 				announcement.loading = false
 				self.markAnnouncementRead(announcement.id)
+				self.updateAnnouncementSongTitle()
 				if(self.announcement){
 					self.renderAnnouncementList()
 				}
@@ -4321,6 +4337,7 @@ class SongSelect{
 				announcement.body = "<p>...</p>"
 				announcement.loading = false
 				self.markAnnouncementRead(announcement.id)
+				self.updateAnnouncementSongTitle()
 				if(self.announcement){
 					self.renderAnnouncementList()
 				}
@@ -4333,19 +4350,9 @@ class SongSelect{
 		}
 		var listDiv = this.announcement.div.querySelector(":scope #announcement-list")
 		var read = this.getAnnouncementRead()
-		var newCount = this.getNewAnnouncementCount()
 
 		var titleDiv = this.announcement.div.querySelector(":scope #announcement-title")
 		titleDiv.innerText = strings.announcement.announcement
-
-		var newCountDiv = this.announcement.div.querySelector(":scope #announcement-newcount")
-		if(newCount > 0){
-			newCountDiv.innerText = strings.announcement.newCount.replace("{n}", newCount)
-			newCountDiv.style.display = ""
-		}else{
-			newCountDiv.innerText = ""
-			newCountDiv.style.display = "none"
-		}
 
 		listDiv.innerHTML = ""
 		this.announcement.results = []

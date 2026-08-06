@@ -31,6 +31,21 @@
 	background-color: rgba(60, 20, 40, 0.92);
 }
 
+#announcement-close {
+    position: absolute;
+    right: -0.5em;
+    top: -0.8em;
+    font-size: 2em;
+    font-family: TnT;
+    cursor: pointer;
+    color: #fff;
+    z-index: 3;
+}
+
+#announcement-close:hover::before{
+    -webkit-text-stroke: 0.25em #fff923;
+}
+
 #announcement-container.touch-enabled{
 	font-size: calc(3 * var(--vmin, 1vmin));
 }
@@ -62,11 +77,13 @@
 	-webkit-text-stroke: 0.08em #8C0C42;
 }
 
-#announcement-newcount {
-	font-size: 1.2em;
-	color: #ff9fb7;
-	flex: 1;
-	-webkit-text-stroke: 0.06em #8C0C42;
+#announcement-footer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.6em 0 0.8em 0;
+	border-top: 0.15em solid rgba(255,255,255,0.3);
+	flex-shrink: 0;
 }
 
 #announcement-markall {
