@@ -4358,14 +4358,20 @@ class SongSelect{
 			console.log("[i18n] data:", JSON.stringify(i18n).substring(0, 300))
 			if(i18n && i18n.data && i18n.data.attributes && i18n.data.attributes.translations){
 				var translations = i18n.data.attributes.translations
+				// 只取帖子内容翻译（post_ 开头或 field=content），跳过纯标题
 				var translatedBody = ""
+				var hasPostContent = false
 				translations.forEach(function(t){
 					if(t.translated_text){
 						translatedBody += t.translated_text
+						if(t.field !== "title"){
+							hasPostContent = true
+						}
 					}
 				})
-				console.log("[i18n] translatedBody length=" + translatedBody.length)
-				callback(translatedBody || null)
+				console.log("[i18n] translatedBody length=" + translatedBody.length + " hasPostContent=" + hasPostContent)
+				// 没有帖子内容翻译时（如母语帖子），降级用原文
+				callback(hasPostContent ? translatedBody : null)
 			}else{
 				console.log("[i18n] no translations found")
 				callback(null)
