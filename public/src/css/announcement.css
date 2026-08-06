@@ -53,8 +53,8 @@
 #announcement-title {
 	position: absolute;
 	top: -0.7em;
-	left: 0;
-	font-size: 1.65em;
+	left: 0.2em;
+	font-size: 2.2em;
 	color: #fff;
 	z-index: 1;
 	-webkit-text-stroke: 0.08em #000;
