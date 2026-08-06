@@ -58,6 +58,7 @@
 	color: #fff;
 	z-index: 1;
 	-webkit-text-stroke: 0.08em #000;
+	font-family: TnT, Meiryo, sans-serif;
 }
 
 /* 列表区域 */
