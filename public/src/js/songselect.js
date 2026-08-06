@@ -4258,7 +4258,7 @@ class SongSelect{
 		}
 		this.announcementsLoaded = true
 		var self = this
-		fetch("https://f.ani-nya.com/api/discussions?filter%5Btag%5D=12-taiko-info&page%5Blimit%5D=50")
+		fetch("/api/forum/discussions?filter%5Btag%5D=12-taiko-info&page%5Blimit%5D=50")
 			.then(response => response.json())
 			.then(data => {
 				if(!data || !data.data){
@@ -4314,7 +4314,7 @@ class SongSelect{
 		var self = this
 		announcement.body = ""
 		announcement.loading = true
-		fetch("https://f.ani-nya.com/api/discussions/" + announcement.id)
+		fetch("/api/forum/discussions/" + announcement.id)
 			.then(response => response.json())
 			.then(data => {
 				var body = ""
