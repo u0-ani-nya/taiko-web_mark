@@ -4413,6 +4413,15 @@ class SongSelect{
 
 			var body = document.createElement("div")
 			body.className = "announcement-item-body"
+			if(announcement.open){
+				if(announcement.body === null){
+					body.innerHTML = "<div style='padding:0.5em;opacity:0.6;'>...</div>"
+				}else if(announcement.body === ""){
+					body.innerHTML = "<div style='padding:0.5em;opacity:0.6;'>...</div>"
+				}else{
+					body.innerHTML = announcement.body
+				}
+			}
 			item.appendChild(body)
 
 			listDiv.appendChild(item)
