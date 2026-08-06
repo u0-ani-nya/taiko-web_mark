@@ -138,6 +138,21 @@ class Controller{
 				}
 			}
 		})
+		
+		// 离开页面：暂停游戏；回来：恢复（仅非联机副机）
+		if(this.multiplayer !== 2){
+			this.visibilityHide = () => {
+				if(!this.game.isPaused()){
+					this.game.togglePause(true, 0, true)
+				}
+			}
+			this.visibilityShow = () => {
+				if(this.game.isPaused() && !this.cleaned){
+					this.game.togglePause(false, 0, true)
+				}
+			}
+			pageVisibility.add(this.visibilityHide, this.visibilityShow)
+		}
 	}
 	startMainLoop(){
 		this.mainLoopRunning = true
@@ -437,6 +452,7 @@ class Controller{
 	}
 	clean(){
 		this.cleaned = true
+		pageVisibility.remove(this.visibilityHide, this.visibilityShow)
 		if(this.multiplayer === 1){
 			this.syncWith.clean()
 		}

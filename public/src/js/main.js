@@ -67,6 +67,50 @@ if(/iPhone|iPad/.test(navigator.userAgent)){
 }
 
 var pageEvents = new PageEvents()
+
+// 页面可见性分发器：各界面（选曲/游戏）注册离开/回来处理
+var pageVisibility = {
+	hideHandlers: [],
+	showHandlers: [],
+	add(hide, show){
+		if(hide){
+			this.hideHandlers.push(hide)
+		}
+		if(show){
+			this.showHandlers.push(show)
+		}
+	},
+	remove(hide, show){
+		if(hide){
+			var hIndex = this.hideHandlers.indexOf(hide)
+			if(hIndex !== -1){
+				this.hideHandlers.splice(hIndex, 1)
+			}
+		}
+		if(show){
+			var sIndex = this.showHandlers.indexOf(show)
+			if(sIndex !== -1){
+				this.showHandlers.splice(sIndex, 1)
+			}
+		}
+	},
+	clear(){
+		this.hideHandlers = []
+		this.showHandlers = []
+	}
+}
+document.addEventListener("visibilitychange", function(){
+	if(document.hidden){
+		pageVisibility.hideHandlers.forEach(handler => {
+			try{ handler() }catch(e){}
+		})
+	}else{
+		pageVisibility.showHandlers.forEach(handler => {
+			try{ handler() }catch(e){}
+		})
+	}
+})
+
 var snd = {}
 var p2
 var disableBlur = false

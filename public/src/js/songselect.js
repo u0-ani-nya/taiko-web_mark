@@ -407,6 +407,25 @@ class SongSelect{
 		this.redrawRunning = true
 		this.redrawBind = this.redraw.bind(this)
 		this.redraw()
+		
+		// 离开页面：静音 BGM + 停止预览；回来：恢复 BGM + 重绘
+		// （游戏中的静音由 Controller 暂停负责：togglePause 会停掉 mainAsset，无需在此处理）
+		this.visibilityHide = () => {
+			this.hiddenBgm = this.bgmEnabled
+			this.playBgm(false)
+			this.endPreview()
+			snd.musicGain.mute()
+		}
+		this.visibilityShow = () => {
+			snd.musicGain.unmute()
+			if(this.hiddenBgm){
+				this.playBgm(true)
+			}
+			this.drawBackground(this.songs[this.selectedSong].originalCategory)
+			this.redraw()
+		}
+		pageVisibility.add(this.visibilityHide, this.visibilityShow)
+		
 		pageEvents.send("song-select")
 		pageEvents.send("song-select-move", this.songs[this.selectedSong])
 		if(songIdIndex !== -1){
@@ -4281,6 +4300,7 @@ class SongSelect{
 	}
 	
 	clean(){
+		pageVisibility.remove(this.visibilityHide, this.visibilityShow)
 		this.keyboard.clean()
 		this.gamepad.clean()
 		this.clearHash()
