@@ -4346,19 +4346,7 @@ class SongSelect{
 			callback(null)
 			return
 		}
-		fetch("/api/i18n/translate", {
-			method: "POST",
-			headers: { "Content-Type": "application/json", "Accept": "application/json" },
-			body: JSON.stringify({
-				data: {
-					type: "i18n-translations",
-					attributes: {
-						discussion_id: announcement.id,
-						target_lang: targetLang
-					}
-				}
-			})
-		})
+		fetch("/api/i18n/translate?discussion_id=" + announcement.id + "&target_lang=" + encodeURIComponent(targetLang))
 		.then(function(r){ return r.json() })
 		.then(function(i18n){
 			if(i18n && i18n.data && i18n.data.attributes && i18n.data.attributes.translations){
