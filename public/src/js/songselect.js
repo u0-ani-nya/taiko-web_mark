@@ -4342,13 +4342,20 @@ class SongSelect{
 	fetchAnnouncementTranslation(announcement, callback){
 		var i18nLangMap = { ja: "ja", en: "en", cn: "zh-Hans", tw: "zh-Hant", ko: "ko" }
 		var targetLang = i18nLangMap[strings.id]
+		console.log("[i18n] lang=" + strings.id + " targetLang=" + targetLang + " id=" + announcement.id)
 		if(!targetLang){
 			callback(null)
 			return
 		}
-		fetch("/api/i18n/translate?discussion_id=" + announcement.id + "&target_lang=" + encodeURIComponent(targetLang))
-		.then(function(r){ return r.json() })
+		var url = "/api/i18n/translate?discussion_id=" + announcement.id + "&target_lang=" + encodeURIComponent(targetLang)
+		console.log("[i18n] fetching: " + url)
+		fetch(url)
+		.then(function(r){
+			console.log("[i18n] response status=" + r.status)
+			return r.json()
+		})
 		.then(function(i18n){
+			console.log("[i18n] data:", JSON.stringify(i18n).substring(0, 300))
 			if(i18n && i18n.data && i18n.data.attributes && i18n.data.attributes.translations){
 				var translations = i18n.data.attributes.translations
 				var translatedBody = ""
@@ -4357,12 +4364,17 @@ class SongSelect{
 						translatedBody += t.translated_text
 					}
 				})
+				console.log("[i18n] translatedBody length=" + translatedBody.length)
 				callback(translatedBody || null)
 			}else{
+				console.log("[i18n] no translations found")
 				callback(null)
 			}
 		})
-		.catch(function(){ callback(null) })
+		.catch(function(e){
+			console.log("[i18n] error:", e)
+			callback(null)
+		})
 	}
 
 	finishLoadAnnouncement(announcement){
