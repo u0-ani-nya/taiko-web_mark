@@ -4326,22 +4326,64 @@ class SongSelect{
 					})
 				}
 				announcement.body = body || "<p>...</p>"
-				announcement.loading = false
-				self.markAnnouncementRead(announcement.id)
-				self.updateAnnouncementSongTitle()
-				if(self.announcement){
-					self.renderAnnouncementList()
-				}
+				self.fetchAnnouncementTranslation(announcement, function(translated){
+					if(translated){
+						announcement.body = translated
+					}
+					self.finishLoadAnnouncement(announcement)
+				})
 			})
 			.catch(e => {
 				announcement.body = "<p>...</p>"
-				announcement.loading = false
-				self.markAnnouncementRead(announcement.id)
-				self.updateAnnouncementSongTitle()
-				if(self.announcement){
-					self.renderAnnouncementList()
+				self.finishLoadAnnouncement(announcement)
+			})
+	}
+
+	fetchAnnouncementTranslation(announcement, callback){
+		var i18nLangMap = { ja: "ja", en: "en", cn: "zh-Hans", tw: "zh-Hant", ko: "ko" }
+		var targetLang = i18nLangMap[strings.id]
+		if(!targetLang){
+			callback(null)
+			return
+		}
+		fetch("/api/i18n/translate", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", "Accept": "application/json" },
+			body: JSON.stringify({
+				data: {
+					type: "i18n-translations",
+					attributes: {
+						discussion_id: announcement.id,
+						target_lang: targetLang
+					}
 				}
 			})
+		})
+		.then(function(r){ return r.json() })
+		.then(function(i18n){
+			if(i18n && i18n.data && i18n.data.attributes && i18n.data.attributes.translations){
+				var translations = i18n.data.attributes.translations
+				var translatedBody = ""
+				translations.forEach(function(t){
+					if(t.translated_text){
+						translatedBody += t.translated_text
+					}
+				})
+				callback(translatedBody || null)
+			}else{
+				callback(null)
+			}
+		})
+		.catch(function(){ callback(null) })
+	}
+
+	finishLoadAnnouncement(announcement){
+		announcement.loading = false
+		this.markAnnouncementRead(announcement.id)
+		this.updateAnnouncementSongTitle()
+		if(this.announcement){
+			this.renderAnnouncementList()
+		}
 	}
 
 	renderAnnouncementList(){
