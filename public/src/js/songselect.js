@@ -58,6 +58,12 @@ class SongSelect{
 				border: ["#dec4fd", "#a543ef"],
 				outline: "#a741ef"
 			},
+			"announcement": {
+				sort: 0,
+				background: "#ffd166",
+				border: ["#ffedb0", "#e0a300"],
+				outline: "#c78c00"
+			},
 			"songSuggest": {
 				sort: 0,
 				background: "#afeeee",
@@ -186,6 +192,12 @@ class SongSelect{
 			skin: this.songSkin.settings,
 			action: "settings",
 			category: strings.gameSettings
+		})
+		this.songs.push({
+			title: strings.announcement.announcement,
+			skin: this.songSkin.announcement,
+			action: "announcement",
+			category: strings.announcement.announcement
 		})
 		
 		var showCustom = false
@@ -425,6 +437,9 @@ class SongSelect{
 			this.redraw()
 		}
 		pageVisibility.add(this.visibilityHide, this.visibilityShow)
+		
+		// 公告：加载 taiko-info 帖子，有未读新公告时自动弹出
+		this.loadAnnouncements()
 		
 		pageEvents.send("song-select")
 		pageEvents.send("song-select-move", this.songs[this.selectedSong])
@@ -1246,6 +1261,38 @@ class SongSelect{
 					this.searchProceed(parseInt(this.search.results[this.search.active].dataset.songId))
 				}
 			}
+		}else if(this.announcement){
+			if(name === "back"){
+				this.removeAnnouncement(true)
+			}else if(name === "down" && this.announcement.results.length){
+				if(this.announcement.active === null || this.announcement.active === undefined){
+					this.announcementActive(0)
+				}else if(this.announcement.active === this.announcement.results.length - 1){
+					this.announcementActive(null)
+				}else{
+					this.announcementActive(this.announcement.active + 1)
+				}
+			}else if(name === "up" && this.announcement.results.length){
+				if(this.announcement.active === null || this.announcement.active === undefined){
+					this.announcementActive(this.announcement.results.length - 1)
+				}else if(this.announcement.active === 0){
+					this.announcementActive(null)
+				}else{
+					this.announcementActive(this.announcement.active - 1)
+				}
+			}else if(name === "confirm"){
+				if(Number.isInteger(this.announcement.active)){
+					var item = this.announcement.results[this.announcement.active]
+					if(item.dataset && item.dataset.openForum){
+						this.announcementClick({target: item, which: 1})
+					}else if(item.dataset && item.dataset.id){
+						var announcement = this.announcements.find(a => a.id === parseInt(item.dataset.id))
+						if(announcement){
+							this.toggleAnnouncement(announcement)
+						}
+					}
+				}
+			}
 		}else if(this.state.screen === "song"){
 			if(event && event.keyCode && event.keyCode === 70 && ctrl){
 				this.displaySearch()
@@ -1693,6 +1740,8 @@ class SongSelect{
 				this.toAbout()
 			}else if(currentSong.action === "settings"){
 				this.toSettings()
+			}else if(currentSong.action === "announcement"){
+				this.displayAnnouncement()
 			}else if(currentSong.action === "songSuggest"){
 				const tab = window.open('https://docs.google.com/forms/d/e/1FAIpQLScy9dObtt-EQcxmfpZ2439ElZ_OS7L37ngnUlBbGQex4vtq_g/viewform?usp=sf_link', '_blank')
 			}else if(currentSong.action === "customSongs"){
@@ -4136,6 +4185,364 @@ class SongSelect{
 		this.ctx.restore()
 	}
 
+	// ================= 公告面板 =================
+	// 数据源：f.ani-nya.com Flarum 论坛 taiko-info 标签
+	// 列表：/api/discussions?filter[tag]=12-taiko-info
+	// 正文：/api/discussions/{id}（懒加载，contentHtml 在 included[].posts[].contentHtml）
+	// 已读：cookie "taiko_ann_read" = "2,5,8"（逗号分隔帖子 ID）
+	getAnnouncementRead(){
+		var cookie = getCookie("taiko_ann_read")
+		if(!cookie){
+			return []
+		}
+		return cookie.split(",").map(id => parseInt(id)).filter(id => !isNaN(id))
+	}
+
+	setAnnouncementRead(ids){
+		var unique = [...new Set(ids)]
+		setCookie("taiko_ann_read", unique.join(","), 365)
+	}
+
+	markAnnouncementRead(id){
+		var read = this.getAnnouncementRead()
+		if(read.indexOf(id) === -1){
+			read.push(id)
+			this.setAnnouncementRead(read)
+		}
+	}
+
+	markAllAnnouncementsRead(){
+		if(!this.announcements){
+			return
+		}
+		var ids = this.announcements.map(a => a.id)
+		this.setAnnouncementRead(ids)
+		if(this.announcement){
+			this.renderAnnouncementList()
+		}
+	}
+
+	hasNewAnnouncements(){
+		if(!this.announcements || this.announcements.length === 0){
+			return false
+		}
+		var read = this.getAnnouncementRead()
+		return this.announcements.some(a => read.indexOf(a.id) === -1)
+	}
+
+	getNewAnnouncementCount(){
+		if(!this.announcements){
+			return 0
+		}
+		var read = this.getAnnouncementRead()
+		return this.announcements.filter(a => read.indexOf(a.id) === -1).length
+	}
+
+	loadAnnouncements(){
+		if(this.announcementsLoaded){
+			return
+		}
+		this.announcementsLoaded = true
+		var self = this
+		fetch("https://f.ani-nya.com/api/discussions?filter%5Btag%5D=12-taiko-info&page%5Blimit%5D=50")
+			.then(response => response.json())
+			.then(data => {
+				if(!data || !data.data){
+					throw new Error("no data")
+				}
+				var announcements = data.data.map(discussion => {
+					return {
+						id: parseInt(discussion.id),
+						title: discussion.attributes.title,
+						isSticky: !!discussion.attributes.isSticky,
+						createdAt: discussion.attributes.createdAt,
+						lastPostedAt: discussion.attributes.lastPostedAt,
+						shareUrl: discussion.attributes.shareUrl,
+						firstPostId: discussion.relationships && discussion.relationships.firstPost && discussion.relationships.firstPost.data ? parseInt(discussion.relationships.firstPost.data.id) : null,
+						body: null
+					}
+				})
+				// 置顶优先，组内按创建时间降序（最新最前）
+				announcements.sort((a, b) => {
+					if(a.isSticky !== b.isSticky){
+						return a.isSticky ? -1 : 1
+					}
+					return (b.createdAt || "").localeCompare(a.createdAt || "")
+				})
+				self.announcements = announcements
+				self.announcementsError = false
+				if(self.announcement){
+					self.renderAnnouncementList()
+				}
+				// 自动弹出：有未读新公告，且本次会话未弹过
+				if(self.hasNewAnnouncements() && !self.announcementAutoShown){
+					self.announcementAutoShown = true
+					setTimeout(() => {
+						if(!self.announcement && self.state && self.state.screen && self.state.screen.indexOf("song") !== -1){
+							self.displayAnnouncement()
+						}
+					}, 300)
+				}
+			})
+			.catch(e => {
+				self.announcementsError = true
+				if(self.announcement){
+					self.renderAnnouncementList()
+				}
+			})
+	}
+
+	loadAnnouncementBody(announcement){
+		if(announcement.body !== null){
+			return
+		}
+		var self = this
+		announcement.body = ""
+		announcement.loading = true
+		fetch("https://f.ani-nya.com/api/discussions/" + announcement.id)
+			.then(response => response.json())
+			.then(data => {
+				var body = ""
+				if(data && data.included){
+					data.included.forEach(inc => {
+						if(inc.type === "posts" && inc.attributes && inc.attributes.contentHtml){
+							body += inc.attributes.contentHtml
+						}
+					})
+				}
+				announcement.body = body || "<p>...</p>"
+				announcement.loading = false
+				self.markAnnouncementRead(announcement.id)
+				if(self.announcement){
+					self.renderAnnouncementList()
+				}
+			})
+			.catch(e => {
+				announcement.body = "<p>...</p>"
+				announcement.loading = false
+				self.markAnnouncementRead(announcement.id)
+				if(self.announcement){
+					self.renderAnnouncementList()
+				}
+			})
+	}
+
+	renderAnnouncementList(){
+		if(!this.announcement){
+			return
+		}
+		var listDiv = this.announcement.div.querySelector(":scope #announcement-list")
+		var read = this.getAnnouncementRead()
+		var newCount = this.getNewAnnouncementCount()
+
+		var titleDiv = this.announcement.div.querySelector(":scope #announcement-title")
+		titleDiv.innerText = strings.announcement.announcement
+
+		var newCountDiv = this.announcement.div.querySelector(":scope #announcement-newcount")
+		if(newCount > 0){
+			newCountDiv.innerText = strings.announcement.newCount.replace("{n}", newCount)
+			newCountDiv.style.display = ""
+		}else{
+			newCountDiv.innerText = ""
+			newCountDiv.style.display = "none"
+		}
+
+		listDiv.innerHTML = ""
+		this.announcement.results = []
+
+		if(this.announcementsError){
+			var errorDiv = document.createElement("div")
+			errorDiv.id = "announcement-error"
+			errorDiv.innerText = strings.announcement.loadFailed
+			listDiv.appendChild(errorDiv)
+			return
+		}
+		if(!this.announcements || this.announcements.length === 0){
+			var emptyDiv = document.createElement("div")
+			emptyDiv.id = "announcement-empty"
+			emptyDiv.innerText = strings.announcement.noAnnouncement
+			listDiv.appendChild(emptyDiv)
+			return
+		}
+
+		this.announcements.forEach(announcement => {
+			var item = document.createElement("div")
+			item.className = "announcement-item"
+			item.dataset.id = announcement.id
+			if(read.indexOf(announcement.id) !== -1){
+				item.classList.add("read")
+			}
+			if(announcement.open){
+				item.classList.add("open")
+			}
+
+			var header = document.createElement("div")
+			header.className = "announcement-item-header"
+
+			if(announcement.isSticky){
+				var sticky = document.createElement("span")
+				sticky.className = "announcement-item-sticky"
+				sticky.innerText = strings.announcement.sticky
+				header.appendChild(sticky)
+			}
+			if(read.indexOf(announcement.id) === -1){
+				var unread = document.createElement("span")
+				unread.className = "announcement-item-unread"
+				header.appendChild(unread)
+			}
+
+			var title = document.createElement("span")
+			title.className = "announcement-item-title"
+			title.innerText = announcement.title
+			header.appendChild(title)
+
+			var date = document.createElement("span")
+			date.className = "announcement-item-date"
+			var d = new Date(announcement.createdAt)
+			date.innerText = isNaN(d.getTime()) ? "" : (d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"))
+			header.appendChild(date)
+
+			item.appendChild(header)
+
+			var body = document.createElement("div")
+			body.className = "announcement-item-body"
+			item.appendChild(body)
+
+			listDiv.appendChild(item)
+			this.announcement.results.push(item)
+		})
+
+		// 底部：打开论坛链接
+		var openLink = document.createElement("div")
+		openLink.className = "announcement-item-header"
+		openLink.style.justifyContent = "center"
+		openLink.style.cursor = "pointer"
+		var openText = document.createElement("span")
+		openText.className = "announcement-item-title"
+		openText.style.flex = "none"
+		openText.style.color = "#ffd166"
+		openText.innerText = strings.announcement.openForum + " ↗"
+		openLink.appendChild(openText)
+		openLink.dataset.openForum = "1"
+		listDiv.appendChild(openLink)
+		this.announcement.results.push(openLink)
+	}
+
+	displayAnnouncement(fromButton=false){
+		if(this.announcement){
+			return this.removeAnnouncement(true)
+		}
+
+		this.announcement = {}
+		this.announcement.div = document.createElement("div")
+		this.announcement.div.innerHTML = assets.pages["announcement"]
+
+		this.announcementContainer = this.announcement.div.querySelector(":scope #announcement-container")
+		if(this.touchEnabled){
+			this.announcementContainer.classList.add("touch-enabled")
+		}
+		pageEvents.add(this.announcementContainer, ["mousedown", "touchstart"], this.announcementClick.bind(this))
+
+		var markAll = this.announcement.div.querySelector(":scope #announcement-markall")
+		markAll.innerText = strings.announcement.markAllRead
+
+		this.playSound("se_pause")
+		loader.screen.appendChild(this.announcement.div)
+		cancelTouch = false
+		noResizeRoot = true
+		if(this.songs[this.selectedSong].courses){
+			snd.previewGain.setVolumeMul(0.5)
+		}else if(this.bgmEnabled){
+			snd.musicGain.setVolumeMul(0.5)
+		}
+
+		if(!this.announcementsLoaded){
+			this.loadAnnouncements()
+		}
+		this.renderAnnouncementList()
+	}
+
+	removeAnnouncement(byUser=false){
+		if(this.announcement){
+			if(byUser){
+				this.playSound("se_cancel")
+			}
+			pageEvents.remove(this.announcement.div.querySelector(":scope #announcement-container"),
+			["mousedown", "touchstart"])
+
+			this.announcement.div.remove()
+			delete this.announcement
+			cancelTouch = true
+			noResizeRoot = false
+			if(this.songs[this.selectedSong].courses){
+				snd.previewGain.setVolumeMul(1)
+			}else if(this.bgmEnabled){
+				snd.musicGain.setVolumeMul(1)
+			}
+		}
+	}
+
+	announcementClick(e){
+		if((e.target.id === "announcement-container" || e.target.id === "announcement-close") && e.which === 1){
+			this.removeAnnouncement(true)
+		}else if(e.which === 1){
+			var markAll = e.target.closest("#announcement-markall")
+			if(markAll){
+				this.markAllAnnouncementsRead()
+				this.playSound("se_don")
+				return
+			}
+			var openLink = e.target.closest("[data-open-forum]")
+			if(openLink){
+				if(this.announcements && this.announcements.length > 0){
+					window.open(this.announcements[0].shareUrl || "https://f.ani-nya.com/t/12-taiko-info", "_blank")
+				}else{
+					window.open("https://f.ani-nya.com/t/12-taiko-info", "_blank")
+				}
+				return
+			}
+			var itemEl = e.target.closest(".announcement-item")
+			if(itemEl){
+				var id = parseInt(itemEl.dataset.id)
+				var announcement = this.announcements.find(a => a.id === id)
+				if(announcement){
+					this.toggleAnnouncement(announcement)
+				}
+			}
+		}
+	}
+
+	toggleAnnouncement(announcement){
+		announcement.open = !announcement.open
+		if(announcement.open && announcement.body === null){
+			this.loadAnnouncementBody(announcement)
+		}
+		if(this.announcement){
+			this.renderAnnouncementList()
+			// 滚动到展开的条目
+			var item = this.announcement.div.querySelector('.announcement-item[data-id="' + announcement.id + '"]')
+			if(item){
+				item.scrollIntoView({block: "nearest"})
+			}
+		}
+	}
+
+	announcementActive(idx){
+		if(this.announcement){
+			if(this.announcement.activeItem){
+				this.announcement.activeItem.classList.remove("active")
+			}
+			this.announcement.active = idx
+			if(idx !== null && idx !== undefined && this.announcement.results[idx]){
+				this.announcement.activeItem = this.announcement.results[idx]
+				this.announcement.activeItem.classList.add("active")
+				this.announcement.activeItem.scrollIntoView({block: "nearest"})
+			}else{
+				this.announcement.activeItem = null
+			}
+		}
+	}
+
 	searchClick(e){
 		if((e.target.id === "song-search-container" || e.target.id === "song-search-close") && e.which === 1){
 			this.removeSearch(true)
@@ -4334,6 +4741,7 @@ class SongSelect{
 			delete this.touchFullBtn
 		}
 		loader.screen.removeChild(this.searchStyle)
+		this.removeAnnouncement()
 		delete this.selectable
 		delete this.ctx
 		delete this.canvas

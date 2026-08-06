@@ -48,7 +48,8 @@ var assets = {
 		"debug.css",
 		"songbg.css",
 		"view.css",
-		"search.css"
+		"search.css",
+		"announcement.css"
 	],
 	"assetsCss": [
 		"img/img.css"
@@ -270,7 +271,8 @@ var assets = {
 		"account.html",
 		"login.html",
 		"customsongs.html",
-		"search.html"
+		"search.html",
+		"announcement.html"
 	],
 	
 	"songs": [],

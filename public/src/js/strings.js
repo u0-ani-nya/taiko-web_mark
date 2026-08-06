@@ -1728,6 +1728,57 @@ var translations = {
 				"Looking for creative courses from a specific creator? Use the \"maker:<name>\" filter!"
 			]
 		}
+	},
+	announcement: {
+		announcement: {
+			ja: "お知らせ",
+			en: "Announcement",
+			cn: "公告",
+			tw: "公告",
+			ko: "공지"
+		},
+		newCount: {
+			ja: "新しいお知らせ {n} 件",
+			en: "{n} new announcement(s)",
+			cn: "{n} 条新公告",
+			tw: "{n} 條新公告",
+			ko: "새 공지 {n}개"
+		},
+		markAllRead: {
+			ja: "すべて既読にする",
+			en: "Mark all as read",
+			cn: "全部标记已读",
+			tw: "全部標記已讀",
+			ko: "모두 읽음 처리"
+		},
+		openForum: {
+			ja: "フォーラムを開く",
+			en: "Open forum",
+			cn: "打开论坛",
+			tw: "打開論壇",
+			ko: "포럼 열기"
+		},
+		noAnnouncement: {
+			ja: "お知らせはありません。",
+			en: "No announcements.",
+			cn: "暂无公告。",
+			tw: "暫無公告。",
+			ko: "공지가 없습니다."
+		},
+		loadFailed: {
+			ja: "お知らせの取得に失敗しました。",
+			en: "Failed to load announcements.",
+			cn: "公告加载失败。",
+			tw: "公告載入失敗。",
+			ko: "공지를 불러오지 못했습니다."
+		},
+		sticky: {
+			ja: "固定",
+			en: "Sticky",
+			cn: "置顶",
+			tw: "置頂",
+			ko: "고정"
+		}
 	}
 }
 var allStrings = {}

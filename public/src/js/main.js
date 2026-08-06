@@ -111,6 +111,21 @@ document.addEventListener("visibilitychange", function(){
 	}
 })
 
+// Cookie 工具（公告已读状态等）
+function getCookie(name){
+	var match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + '=([^;]*)'))
+	return match ? decodeURIComponent(match[1]) : null
+}
+function setCookie(name, value, days){
+	var expires = ""
+	if(days){
+		var date = new Date()
+		date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000)
+		expires = "; expires=" + date.toUTCString()
+	}
+	document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/"
+}
+
 var snd = {}
 var p2
 var disableBlur = false
