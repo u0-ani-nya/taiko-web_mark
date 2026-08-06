@@ -4353,6 +4353,7 @@ class SongSelect{
 
 		var titleDiv = this.announcement.div.querySelector(":scope #announcement-title")
 		titleDiv.innerText = strings.announcement.announcement
+		titleDiv.setAttribute("alt", strings.announcement.announcement)
 
 		listDiv.innerHTML = ""
 		this.announcement.results = []
@@ -4461,6 +4462,7 @@ class SongSelect{
 
 		var markAll = this.announcement.div.querySelector(":scope #announcement-markall")
 		markAll.innerText = strings.announcement.markAllRead
+		markAll.setAttribute("alt", strings.announcement.markAllRead)
 
 		this.playSound("se_pause")
 		loader.screen.appendChild(this.announcement.div)
