@@ -139,19 +139,16 @@ class Controller{
 			}
 		})
 		
-		// 离开页面：暂停游戏；回来：恢复（仅非联机副机）
-		if(this.multiplayer !== 2){
+		// 离开页面：暂停游戏并显示暂停 UI；回来不自动恢复，由用户手动恢复
+		// 自动模式不暂停：用户离开多半是为了听歌，保持播放
+		if(this.multiplayer !== 2 && !this.autoPlayEnabled){
 			this.visibilityHide = () => {
 				if(!this.game.isPaused()){
+					// pauseMove(0, true): 暂停菜单光标定位到 "Continue"，用户回来按确认即可继续
 					this.game.togglePause(true, 0, true)
 				}
 			}
-			this.visibilityShow = () => {
-				if(this.game.isPaused() && !this.cleaned){
-					this.game.togglePause(false, 0, true)
-				}
-			}
-			pageVisibility.add(this.visibilityHide, this.visibilityShow)
+			pageVisibility.add(this.visibilityHide)
 		}
 	}
 	startMainLoop(){
