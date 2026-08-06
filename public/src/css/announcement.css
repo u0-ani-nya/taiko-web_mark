@@ -53,11 +53,10 @@
 #announcement-title {
 	position: absolute;
 	top: -0.7em;
-	left: 0.2em;
+	left: 0.7em;
 	font-size: 2.2em;
 	color: #fff;
 	z-index: 1;
-	-webkit-text-stroke: 0.08em #000;
 	font-family: TnT, Meiryo, sans-serif;
 }
 
