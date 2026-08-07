@@ -222,14 +222,6 @@ class Controller{
 					// 判断是否为严重卡顿
 					if(_delta > 200){
 						console.error("[SEVERE LAG] " + _info)
-						// 尝试抓取长任务
-						try{
-							var _entries = performance.getEntriesByType("longtask")
-							if(_entries.length > 0){
-								var _last = _entries[_entries.length - 1]
-								console.error("[SEVERE LAG] last longtask: duration=" + _last.duration.toFixed(1) + "ms name=" + _last.name + " startTime=" + _last.startTime.toFixed(0))
-							}
-						}catch(e){}
 					} else if(_delta > 50){
 						console.warn("[lag] " + _info)
 					}
