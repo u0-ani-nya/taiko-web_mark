@@ -200,7 +200,9 @@ class Controller{
 						}else if(Math.abs(_peakBucket - 50) <= 5 && _buckets[_peakBucket] / _d.window.length > 0.6){
 							_locked = " ⚠️疑似Chrome节能锁20fps（峰值" + _peakBucket + "ms占比" + Math.round(_buckets[_peakBucket] / _d.window.length * 100) + "%）"
 						}
-						console.warn("[fps] 平均帧间隔=" + _avg.toFixed(1) + "ms (" + Math.round(1000 / _avg) + "fps) 峰值分布=" + _peakBucket + "ms" + _locked)
+						if(window.__debugPerf){
+							console.warn("[fps] 平均帧间隔=" + _avg.toFixed(1) + "ms (" + Math.round(1000 / _avg) + "fps) 峰值分布=" + _peakBucket + "ms" + _locked)
+						}
 						_d.window = []
 					}
 				}
@@ -258,11 +260,13 @@ class Controller{
 						_info += " paused=" + this.game.isPaused()
 						_info += " circles=" + (this.game.songData ? this.game.songData.circles.length : "?")
 					}
-					// 判断是否为严重卡顿
-					if(_delta > 200){
-						console.error("[SEVERE LAG] " + _info)
-					} else if(_delta > 50){
-						console.warn("[lag] " + _info)
+					// 判断是否为严重卡顿（仅调试时输出，避免 console 开销放大卡顿）
+					if(window.__debugPerf){
+						if(_delta > 200){
+							console.error("[SEVERE LAG] " + _info)
+						} else if(_delta > 50){
+							console.warn("[lag] " + _info)
+						}
 					}
 				}
 			}
@@ -327,7 +331,7 @@ class Controller{
 				})
 			}
 			var _ftNow = performance.now()
-			if(this._ftLast && _ftNow - this._ftLast > 33){
+			if(window.__debugPerf && this._ftLast && _ftNow - this._ftLast > 33){
 				var _ftInfo = "[ft] frame=" + (_ftNow - this._ftLast).toFixed(1) + "ms"
 				var _ftData = this.view._ftData || {}
 				for(var _k in _ftData){
