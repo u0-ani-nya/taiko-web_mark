@@ -19,7 +19,6 @@ var assets = {
 		"soundbuffer.js",
 		"p2.js",
 		"canvasasset.js",
-		"cgfx.js",
 		"viewassets.js",
 		"gamerules.js",
 		"canvasdraw.js",
