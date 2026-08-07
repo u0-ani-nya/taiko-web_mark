@@ -70,14 +70,38 @@ class Game{
 		this.startDate = Date.now() + offsetTime
 	}
 	update(){
+		// 分段计时（临时调试）
+		var _t0 = performance.now()
+		var _marks = {}
+		var _mk = (name) => {
+			var now = performance.now()
+			_marks[name] = now - _t0
+			_t0 = now
+		}
+
 		this.updateTime()
+		_mk("updateTime")
 		// Main operations
 		this.updateCirclesStatus()
+		_mk("updateCirclesStatus")
 		this.checkPlays()
+		_mk("checkPlays")
 		// Event operations
 		this.whenFadeoutMusic()
+		_mk("whenFadeoutMusic")
 		if(this.controller.multiplayer !== 2){
 			this.whenLastCirclePlayed()
+		}
+		_mk("whenLastCirclePlayed")
+
+		// 只有超时才输出
+		var _total = performance.now() - _t0
+		if(_total > 16 || (this.controller && this.controller._lastGameLoopTime && performance.now() - this.controller._lastGameLoopTime > 33)){
+			var _s = "[game-update] total=" + _total.toFixed(1) + "ms"
+			for(var _k in _marks){
+				_s += " " + _k + "=" + _marks[_k].toFixed(1)
+			}
+			console.warn(_s)
 		}
 	}
 	getCircles(){
