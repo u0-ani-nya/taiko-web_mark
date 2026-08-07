@@ -504,24 +504,17 @@ class SongSelect{
 	}
 
 	getSongTitle(song){
+		// 数据库标题优先（用户可能在数据库修整过标题），TJA 标题仅作后备
+		var dbTitle = this.getLocalTitle(song.title, song.title_lang)
 		if(this.isTjaSong(song)){
-			var lang = this.getTjaTitleLanguage()
-			var localizedTitle = this.getTjaLocalizedValue(song.title_lang, lang)
-			if(localizedTitle){
-				return localizedTitle
-			}
-			return song.tja_title || song.title || ""
+			return dbTitle || song.tja_title || ""
 		}
-		return this.getLocalTitle(song.title, song.title_lang)
+		return dbTitle
 	}
 
 	getSongSubtitle(song, title){
 		if(this.isTjaSong(song)){
-			var lang = this.getTjaTitleLanguage()
-			if(this.getTjaLocalizedValue(song.title_lang, lang)){
-				return this.getTjaLocalizedValue(song.subtitle_lang, lang)
-			}
-			return song.tja_subtitle || song.subtitle || ""
+			return song.subtitle || song.tja_subtitle || ""
 		}
 		return this.getLocalTitle(title === song.title ? song.subtitle : "", song.subtitle_lang)
 	}
@@ -592,6 +585,7 @@ class SongSelect{
 	}
 
 	loadTjaTitleMetadata(selectedSong){
+		return // 已禁用：TJA 标题覆盖数据库标题，改为完全使用数据库标题
 		var currentSong = this.songs[selectedSong]
 		if(!currentSong || !this.isTjaSong(currentSong) || currentSong.tjaTitleLoaded || currentSong.tjaTitleLoading || currentSong.tjaTitleFailed){
 			return
