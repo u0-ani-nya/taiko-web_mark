@@ -157,7 +157,16 @@ class Controller{
 		this.gameLoop()
 		this.viewLoop()
 		if(this.multiplayer !== 2){
-			this.gameInterval = setInterval(this.gameLoop.bind(this), 1000 / 60)
+			// 改用 requestAnimationFrame 驱动游戏循环
+			// setInterval 会被主线程阻塞延迟，造成 note 跳帧（音频时钟不变，视觉跟不上）
+			var _self = this
+			var loopGame = function(){
+				if(_self.mainLoopRunning){
+					_self.gameLoop()
+					_self._gameLoopRaf = requestAnimationFrame(loopGame)
+				}
+			}
+			this._gameLoopRaf = requestAnimationFrame(loopGame)
 			pageEvents.send("game-start", {
 				selectedSong: this.selectedSong,
 				autoPlayEnabled: this.autoPlayEnabled,
@@ -185,7 +194,10 @@ class Controller{
 			this.game.mainAsset.stop()
 		}
 		if(this.multiplayer !== 2){
-			clearInterval(this.gameInterval)
+			if(this._gameLoopRaf){
+				cancelAnimationFrame(this._gameLoopRaf)
+				this._gameLoopRaf = null
+			}
 		}
 	}
 	gameLoop(){
