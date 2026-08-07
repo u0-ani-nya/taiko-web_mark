@@ -194,8 +194,33 @@ class Controller{
 			var _now = performance.now()
 			if(this._lastGameLoopTime){
 				var _delta = _now - this._lastGameLoopTime
-				if(_delta > 25){ // 超过 25ms 就是掉帧（正常 16.67ms）
-					console.warn("[lag] gameLoop delta=" + _delta.toFixed(1) + "ms elapsed=" + (this.game.elapsedTime/1000).toFixed(2) + "s")
+				if(_delta > 25){
+					var _info = "[lag] delta=" + _delta.toFixed(1) + "ms elapsed=" + (this.game.elapsedTime/1000).toFixed(2) + "s"
+					// 内存信息
+					if(performance.memory){
+						var _heap = (performance.memory.usedJSHeapSize / 1048576).toFixed(1)
+						var _heapLimit = (performance.memory.jsHeapSizeLimit / 1048576).toFixed(0)
+						_info += " heap=" + _heap + "/" + _heapLimit + "MB"
+					}
+					// 游戏状态
+					if(this.game){
+						_info += " paused=" + this.game.isPaused()
+						_info += " circles=" + (this.game.songData ? this.game.songData.circles.length : "?")
+					}
+					// 判断是否为严重卡顿
+					if(_delta > 200){
+						console.error("[SEVERE LAG] " + _info)
+						// 尝试抓取长任务
+						try{
+							var _entries = performance.getEntriesByType("longtask")
+							if(_entries.length > 0){
+								var _last = _entries[_entries.length - 1]
+								console.error("[SEVERE LAG] last longtask: duration=" + _last.duration.toFixed(1) + "ms name=" + _last.name + " startTime=" + _last.startTime.toFixed(0))
+							}
+						}catch(e){}
+					} else if(_delta > 50){
+						console.warn("[lag] " + _info)
+					}
 				}
 			}
 			this._lastGameLoopTime = _now
