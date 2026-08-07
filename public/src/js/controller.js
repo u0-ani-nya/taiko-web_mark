@@ -295,6 +295,16 @@ class Controller{
 					}
 				})
 			}
+			var _ftNow = performance.now()
+			if(this._ftLast && _ftNow - this._ftLast > 33){
+				var _ftInfo = "[ft] frame=" + (_ftNow - this._ftLast).toFixed(1) + "ms"
+				var _ftData = this.view._ftData || {}
+				for(var _k in _ftData){
+					_ftInfo += " " + _k + "=" + _ftData[_k].toFixed(1)
+				}
+				console.warn(_ftInfo)
+			}
+			this._ftLast = _ftNow
 			this.view.refresh()
 		}
 	}

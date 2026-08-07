@@ -204,6 +204,19 @@
 	}
 	refresh(){
 		var ctx = this.ctx
+		// CG 帧计时（临时调试）
+		var _ft0 = performance.now()
+		var _ft = {}
+		var _ftMark = (name) => {
+			var now = performance.now()
+			if(_ft0 !== null){
+				_ft[name] = (now - _ft0)
+			}
+			_ft0 = now
+		}
+		var _ftDone = () => {
+			this._ftData = _ft
+		}
 
 		var winW = innerWidth
 		var winH = lastHeight
@@ -305,8 +318,9 @@
 		ctx.save()
 		ctx.translate(0, frameTop)
 
+		_ftMark("drawGogoTime")
 		this.drawGogoTime()
-
+		_ftMark("bg")
 		if((!touchMultiplayer || this.player === 1 && frameTop >= 0) && !this.isBalloonCharacterVisible(ms)){
 			this.assets.drawAssets("background")
 		}
@@ -1003,6 +1017,7 @@
 		ctx.restore()
 
 		// Go go time fire
+		_ftMark("bar")
 		this.assets.drawAssets("bar")
 
 		// Hit notes shadow
@@ -1031,6 +1046,7 @@
 		ctx.beginPath()
 		ctx.rect(this.slotPos.paddingLeft, 0, winW - this.slotPos.paddingLeft, winH)
 		ctx.clip()
+		_ftMark("circles")
 		this.drawCircles(this.controller.getCircles())
 		if(this.controller.game.calibrationState === "video"){
 			if(ms % this.beatInterval < 1000 / 60 * 5){
@@ -1081,14 +1097,17 @@
 		// Animating notes
 		this.drawAnimatedCircles(this.controller.getCircles())
 		this.drawAnimatedCircles(this.drumroll)
+		_ftMark("drumroll")
 		this.drawDrumrollCounter()
 
 		// Go-go time fireworks
 		if(!this.touchEnabled && !this.portrait && !this.multiplayer){
+			_ftMark("foreground")
 			this.assets.drawAssets("foreground")
 		}
 
 		this.drawBalloonCharacter(taikoPos)
+		_ftMark("balloon")
 		this.drawBalloonBlowOverlay()
 		this.drawBalloonCounter()
 
@@ -1423,6 +1442,9 @@
 			output += string
 		})
 		return output
+	}
+	_ftDone(){
+		this._ftData = this._ftData || {}
 	}
 	setBackground(){
 		var selectedSong = this.controller.selectedSong
