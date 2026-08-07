@@ -205,17 +205,14 @@
 	refresh(){
 		var ctx = this.ctx
 		// CG 帧计时（临时调试）
+		this._ftData = this._ftData || {}
 		var _ft0 = performance.now()
-		var _ft = {}
 		var _ftMark = (name) => {
 			var now = performance.now()
 			if(_ft0 !== null){
-				_ft[name] = (now - _ft0)
+				this._ftData[name] = (now - _ft0)
 			}
 			_ft0 = now
-		}
-		var _ftDone = () => {
-			this._ftData = _ft
 		}
 
 		var winW = innerWidth
@@ -1110,6 +1107,7 @@
 		_ftMark("balloon")
 		this.drawBalloonBlowOverlay()
 		this.drawBalloonCounter()
+		_ftMark("done")
 
 		// Pause screen
 		if(!this.multiplayer && this.controller.game.paused){
@@ -1442,9 +1440,6 @@
 			output += string
 		})
 		return output
-	}
-	_ftDone(){
-		this._ftData = this._ftData || {}
 	}
 	setBackground(){
 		var selectedSong = this.controller.selectedSong
