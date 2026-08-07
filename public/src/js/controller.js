@@ -164,6 +164,45 @@ class Controller{
 				if(_self.mainLoopRunning){
 					_self.gameLoop()
 					_self._gameLoopRaf = requestAnimationFrame(loopGame)
+					// 帧率诊断：统计 rAF 间隔，检测节能模式锁帧
+					var _now = performance.now()
+					if(!_self._fpsDiag){
+						_self._fpsDiag = {last: _now, samples: [], window: []}
+					}
+					var _d = _self._fpsDiag
+					var _delta = _now - _d.last
+					_d.last = _now
+					_d.samples.push(_delta)
+					if(_d.samples.length > 600){
+						_d.samples.shift()
+					}
+					_d.window.push(_delta)
+					if(_d.window.length >= 120){
+						var _sum = 0
+						var _buckets = {}
+						for(var _i = 0; _i < _d.window.length; _i++){
+							_sum += _d.window[_i]
+							var _b = Math.round(_d.window[_i])
+							_buckets[_b] = (_buckets[_b] || 0) + 1
+						}
+						var _avg = _sum / _d.window.length
+						var _peak = 0
+						var _peakBucket = 0
+						for(var _bk in _buckets){
+							if(_buckets[_bk] > _peak){
+								_peak = _buckets[_bk]
+								_peakBucket = parseInt(_bk)
+							}
+						}
+						var _locked = ""
+						if(Math.abs(_peakBucket - 33) <= 3 && _buckets[_peakBucket] / _d.window.length > 0.6){
+							_locked = " ⚠️疑似Chrome节能锁30fps（峰值" + _peakBucket + "ms占比" + Math.round(_buckets[_peakBucket] / _d.window.length * 100) + "%）"
+						}else if(Math.abs(_peakBucket - 50) <= 5 && _buckets[_peakBucket] / _d.window.length > 0.6){
+							_locked = " ⚠️疑似Chrome节能锁20fps（峰值" + _peakBucket + "ms占比" + Math.round(_buckets[_peakBucket] / _d.window.length * 100) + "%）"
+						}
+						console.warn("[fps] 平均帧间隔=" + _avg.toFixed(1) + "ms (" + Math.round(1000 / _avg) + "fps) 峰值分布=" + _peakBucket + "ms" + _locked)
+						_d.window = []
+					}
 				}
 			}
 			this._gameLoopRaf = requestAnimationFrame(loopGame)

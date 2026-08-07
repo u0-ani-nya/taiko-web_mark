@@ -6,7 +6,12 @@
 		this.controller = controller
 
 		this.canvas = document.getElementById("canvas")
-		this.ctx = this.canvas.getContext("2d")
+		// desynchronized: 绕开主线程与合成器的同步阻塞，直接提交 GPU（缓解节能模式限流）
+		try{
+			this.ctx = this.canvas.getContext("2d", {desynchronized: true})
+		}catch(e){
+			this.ctx = this.canvas.getContext("2d")
+		}
 		var resolution = settings.getItem("resolution")
 		var noSmoothing = resolution === "low" || resolution === "lowest"
 		if(noSmoothing){
