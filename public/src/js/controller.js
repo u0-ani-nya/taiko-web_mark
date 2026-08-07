@@ -190,6 +190,16 @@ class Controller{
 	}
 	gameLoop(){
 		if(this.mainLoopRunning){
+			// 卡顿监控
+			var _now = performance.now()
+			if(this._lastGameLoopTime){
+				var _delta = _now - this._lastGameLoopTime
+				if(_delta > 25){ // 超过 25ms 就是掉帧（正常 16.67ms）
+					console.warn("[lag] gameLoop delta=" + _delta.toFixed(1) + "ms elapsed=" + (this.game.elapsedTime/1000).toFixed(2) + "s")
+				}
+			}
+			this._lastGameLoopTime = _now
+
 			if(this.multiplayer === 1){
 				this.syncWith.game.elapsedTime = this.game.elapsedTime
 				this.syncWith.game.startDate = this.game.startDate
