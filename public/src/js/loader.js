@@ -306,6 +306,7 @@ class Loader{
 				if(this.error){
 					return
 				}
+				this.prewarmEffectImages()
 				if(!account.loggedIn){
 					scoreStorage.load()
 				}
@@ -419,6 +420,71 @@ class Loader{
 	}
 	getFilename(name){
 		return name.slice(0, name.lastIndexOf("."))
+	}
+	// 预热特效图片：强制解码 + GPU 纹理上传，避免游戏内首次绘制卡顿
+	prewarmEffectImages(){
+		var effectIds = [
+			"notes_explosion",
+			"notes_drumroll",
+			"balloon",
+			"fire_anim",
+			"fireworks_anim",
+			"tja_hit_fireworks_keyed",
+			"yatai_balloon_pop",
+			"yatai_balloon_rainbow",
+			"yatai_balloon_rainbow_mask",
+			"yatai_balloon_bubble",
+			"yatai_balloon_counter_digits",
+			"yatai_drumroll_counter_bubble",
+			"yatai_drumroll_counter_digits",
+			"don_anim_normal_a",
+			"don_anim_normal_b1",
+			"don_anim_normal_b2",
+			"don_anim_gogo_a",
+			"don_anim_gogo_b1",
+			"don_anim_gogo_b2",
+			"don_anim_gogostart_a",
+			"don_anim_gogostart_b1",
+			"don_anim_gogostart_b2",
+			"don_anim_10combo_a",
+			"don_anim_10combo_b1",
+			"don_anim_10combo_b2",
+			"don_anim_clear_a",
+			"don_anim_clear_b1",
+			"don_anim_clear_b2"
+		]
+		// 后台异步预热，不阻塞界面
+		setTimeout(() => {
+			var canvas = document.createElement("canvas")
+			var maxW = 0
+			var maxH = 0
+			effectIds.forEach(id => {
+				var img = assets.image[id]
+				if(img && img.complete && img.naturalWidth > 0){
+					maxW = Math.max(maxW, img.naturalWidth)
+					maxH = Math.max(maxH, img.naturalHeight)
+				}
+			})
+			if(maxW === 0 || maxH === 0){
+				return
+			}
+			canvas.width = maxW
+			canvas.height = maxH
+			var ctx = canvas.getContext("2d")
+			effectIds.forEach(id => {
+				var img = assets.image[id]
+				if(!img || !img.complete || img.naturalWidth === 0){
+					return
+				}
+				if(img.decode){
+					img.decode().then(() => {
+						ctx.drawImage(img, 0, 0)
+					}).catch(() => {})
+				}else{
+					ctx.drawImage(img, 0, 0)
+				}
+			})
+		}, 500)
 	}
 	errorMsg(error, url){
 		var rethrow
