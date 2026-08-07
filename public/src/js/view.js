@@ -7,6 +7,9 @@
 
 		this.canvas = document.getElementById("canvas")
 		this.ctx = this.canvas.getContext("2d")
+
+		// CG 特效层（DOM，走合成器线程）
+		cgFx.init(this)
 		var resolution = settings.getItem("resolution")
 		var noSmoothing = resolution === "low" || resolution === "lowest"
 		if(noSmoothing){
@@ -1061,8 +1064,10 @@
 
 		ctx.restore()
 
-		// Hit notes explosion
-		this.assets.drawAssets("notes")
+		// Hit notes explosion（已迁移到 DOM 特效层）
+		if(window.__skipCG){
+			this.assets.drawAssets("notes")
+		}
 
 		// Good, OK, Bad
 		if(scoreMS < 300){
@@ -1632,11 +1637,12 @@
 	}
 	drawAnimatedCircles(circles) {
 		var ms = this.getMS()
+		var useCg = !window.__skipCG
 
 		for(var i = 0; i < circles.length; i++){
 			var circle = circles[i]
 
-			if(circle.animating && !window.__skipCG){
+			if(circle.animating && useCg){
 
 				var animT = circle.animT
 				if(circle.fixedPos){
@@ -1650,7 +1656,14 @@
 					if(circle.type === "balloon"){
 						this.drawBalloonRainbowTrail(animPoint)
 					}else{
-						this.drawHitFireworks(circle, ms - animT)
+						// 爆炸/火花 → DOM 特效层（仅触发一次，canvas 版停用）
+						if(!circle.cgFxSpawned){
+							circle.cgFxSpawned = true
+							var mul = this.slotPos.size / 106
+							var fireMul = mul * (this.portrait ? 0.8 : 1)
+							cgFx.explosion(this.slotPos.x, this.slotPos.y, fireMul, circle.type)
+							cgFx.hitFireworks(bezierPoint.x, bezierPoint.y, mul)
+						}
 					}
 					this.drawCircle(circle, {x: bezierPoint.x, y: bezierPoint.y})
 				}else if(ms < animT + 810){
@@ -1672,9 +1685,8 @@
 		return !circle.isRoll && (circle.type === "daiDon" || circle.type === "daiKa")
 	}
 	drawHitFireworks(circle, elapsed){
-		if(window.__skipCG){
-			return
-		}
+		// 已迁移到 DOM 特效层（cgFx.hitFireworks），canvas 版停用
+		return
 		if(!this.shouldDrawHitFireworks(circle)){
 			return
 		}
@@ -2435,15 +2447,30 @@
 		}
 
 		if(this.gogoTime){
-			this.assets.fireworks.forEach(fireworksAsset => {
-				fireworksAsset.setAnimation("normal")
-				fireworksAsset.setAnimationStart(startMS)
-				var length = fireworksAsset.getAnimationLength("normal")
-				fireworksAsset.setAnimationEnd(length, () => {
-					fireworksAsset.setAnimation(false)
+			if(!window.__skipCG){
+				// DOM 特效层：火焰 + 烟花
+				var mul = this.slotPos.size / 106
+				var pos = this.slotPos
+				cgFx.fire(pos.x, pos.y, mul)
+				if(!this.touchEnabled && !this.portrait && !this.multiplayer){
+					// 5 个烟花环绕
+					for(var f = 0; f < 5; f++){
+						var fx = pos.x + Math.cos(f / 5 * Math.PI * 2) * 240 * mul
+						var fy = pos.y - 200 * mul + Math.sin(f / 5 * Math.PI * 2) * 120 * mul
+						cgFx.fireworks(fx, fy, mul)
+					}
+				}
+			}else{
+				this.assets.fireworks.forEach(fireworksAsset => {
+					fireworksAsset.setAnimation("normal")
+					fireworksAsset.setAnimationStart(startMS)
+					var length = fireworksAsset.getAnimationLength("normal")
+					fireworksAsset.setAnimationEnd(length, () => {
+						fireworksAsset.setAnimation(false)
+					})
 				})
-			})
-			this.assets.fire.setAnimation("normal")
+				this.assets.fire.setAnimation("normal")
+			}
 			var don = this.assets.don
 			don.setAnimation("gogostart")
 			var length = don.getAnimationLength("gogo")
@@ -2452,6 +2479,9 @@
 			don.setAnimationStart(start)
 			var length = don.getAnimationLength("gogostart")
 			don.setAnimationEnd(length, don.normalAnimation)
+		}else{
+			// gogo 结束：移除 DOM 特效
+			cgFx.stopGogo()
 		}
 	}
 	drawGogoTime(){
@@ -2768,6 +2798,7 @@
 		return this.ms
 	}
 	clean(){
+		cgFx.clean()
 		this.draw.clean()
 		this.assets.clean()
 		this.titleCache.clean()

@@ -17,6 +17,7 @@
 	height: 100%;
 	touch-action: none;
 }
+
 #touch-drum{
 	display: none;
 	position: absolute;
@@ -141,4 +142,43 @@
 .pixelated #tetsuo-in,
 .pixelated #hana-in{
 	image-rendering: pixelated;
+}
+
+/* CG 特效 DOM 层 */
+#cg-layer{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 2;
+	pointer-events: none;
+	overflow: hidden;
+}
+#cg-layer .cgfx{
+	position: absolute;
+	background-repeat: no-repeat;
+	image-rendering: auto;
+	transform: translateZ(0);
+	will-change: transform;
+}
+/* 爆炸：5列网格，14帧 → 走 100% 即整行（steps 逐列跳） */
+@keyframes cgfx-explosion{
+	from{ background-position: 0 0; }
+	to{ background-position: 100% 0; }
+}
+/* 命中火花：横排帧 */
+@keyframes cgfx-hitfireworks{
+	from{ background-position: 0 0; }
+	to{ background-position: 100% 0; }
+}
+/* gogo 火焰：7帧循环 */
+@keyframes cgfx-fire{
+	from{ background-position: 0 0; }
+	to{ background-position: 100% 0; }
+}
+/* gogo 烟花：8列网格循环 */
+@keyframes cgfx-fireworks{
+	from{ background-position: 0 0; }
+	to{ background-position: 100% 0; }
 }
