@@ -1636,7 +1636,7 @@
 		for(var i = 0; i < circles.length; i++){
 			var circle = circles[i]
 
-			if(circle.animating){
+			if(circle.animating && !window.__skipCG){
 
 				var animT = circle.animT
 				if(circle.fixedPos){
@@ -1672,6 +1672,9 @@
 		return !circle.isRoll && (circle.type === "daiDon" || circle.type === "daiKa")
 	}
 	drawHitFireworks(circle, elapsed){
+		if(window.__skipCG){
+			return
+		}
 		if(!this.shouldDrawHitFireworks(circle)){
 			return
 		}
