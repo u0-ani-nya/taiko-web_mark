@@ -7,7 +7,6 @@
 
 		this.canvas = document.getElementById("canvas")
 		this.ctx = this.canvas.getContext("2d")
-		this.initCgWorker()
 		var resolution = settings.getItem("resolution")
 		var noSmoothing = resolution === "low" || resolution === "lowest"
 		if(noSmoothing){
@@ -203,66 +202,6 @@
 			ctx.drawImage(assets.image[name], x + i * (size + gap), y, size, size)
 		})
 	}
-	// ==== CG 特效 Worker（OffscreenCanvas 独立线程）====
-	initCgWorker(){
-		try{
-			var canvas = document.getElementById("cg-canvas")
-			if(!canvas){
-				return
-			}
-			this.cgCanvas = canvas
-			var offscreen = canvas.transferControlToOffscreen()
-			this.cgWorker = new Worker("src/js/cgworker.js")
-			// baseUrl 绝对化（相对页面 URL 解析，Worker 内无法访问页面路径）
-			var baseUrl = gameConfig.assets_baseurl
-			if(!/^https?:\/\//i.test(baseUrl)){
-				baseUrl = new URL(baseUrl, location.href).href
-			}
-			this.cgWorker.postMessage({
-				type: "init",
-				ratio: 1,
-				pixelRatio: window.devicePixelRatio || 1,
-				baseUrl: baseUrl
-			}, [offscreen])
-			this.cgWorkerActive = true
-		}catch(e){
-			console.warn("[cg] Worker 不可用，回退到主线程 canvas 特效", e)
-			this.cgWorkerActive = false
-		}
-	}
-	// 同步 CG canvas 尺寸（调用处：resize 时）
-	cgResize(width, height, ratio){
-		if(this.cgWorkerActive){
-			this.cgWorker.postMessage({type: "resize", width: width, height: height, ratio: ratio})
-		}
-	}
-	// 发送特效指令
-	cgSpawn(fx){
-		if(this.cgWorkerActive){
-			this.cgWorker.postMessage({type: "spawn", fx: fx})
-		}
-	}
-	cgStopGogo(){
-		if(this.cgWorkerActive){
-			this.cgWorker.postMessage({type: "stopGogo"})
-		}
-	}
-	cgClear(){
-		if(this.cgWorkerActive){
-			this.cgWorker.postMessage({type: "clear"})
-		}
-	}
-	// 每帧同步时间
-	cgFrame(time){
-		if(this.cgWorkerActive && !this.controller.game.paused){
-			this.cgWorker.postMessage({type: "frame", time: time})
-		}
-	}
-	// 逻辑坐标 → CG canvas 物理像素坐标（Worker 内 scale(ratio) 后与主 canvas 逻辑坐标一致）
-	cgPos(x, y){
-		return {x: x, y: y}
-	}
-
 	refresh(){
 		var ctx = this.ctx
 		// CG 帧计时（临时调试）
@@ -318,7 +257,6 @@
 				ctx.scale(ratio, ratio)
 				this.canvas.style.width = (winW / this.pixelRatio) + "px"
 				this.canvas.style.height = (winH / this.pixelRatio) + "px"
-				this.cgResize(Math.max(1, winW), Math.max(1, winH), ratio)
 				this.titleCache.resize(640, 90, ratio)
 			}
 			if(!this.multiplayer){
@@ -1123,10 +1061,8 @@
 
 		ctx.restore()
 
-		// Hit notes explosion（Worker 版已接管，canvas 版仅 __skipCG 用）
-		if(window.__skipCG){
-			this.assets.drawAssets("notes")
-		}
+		// Hit notes explosion
+		this.assets.drawAssets("notes")
 
 		// Good, OK, Bad
 		if(scoreMS < 300){
@@ -1172,7 +1108,6 @@
 		this.drawBalloonBlowOverlay()
 		this.drawBalloonCounter()
 		_ftMark("done")
-		this.cgFrame(performance.now())
 
 		// Pause screen
 		if(!this.multiplayer && this.controller.game.paused){
@@ -1723,7 +1658,7 @@
 					var fade = (ms - animT - 490) / 160
 					if(circle.type === "balloon"){
 						this.drawBalloonRainbowTrail(1, 1 - fade)
-					}else if(window.__skipCG){
+					}else{
 						this.drawHitFireworks(circle, ms - animT)
 					}
 					this.drawCircle(circle, pos, fade)
@@ -2500,41 +2435,15 @@
 		}
 
 		if(this.gogoTime){
-			if(!window.__skipCG){
-				// Worker 特效：gogo 火焰 + 5 个烟花
-				var mul = this.slotPos.size / 106
-				var pos = this.slotPos
-				var now = performance.now()
-				this.cgSpawn({
-					kind: "fire",
-					x: pos.x,
-					y: pos.y,
-					mul: mul,
-					start: now
+			this.assets.fireworks.forEach(fireworksAsset => {
+				fireworksAsset.setAnimation("normal")
+				fireworksAsset.setAnimationStart(startMS)
+				var length = fireworksAsset.getAnimationLength("normal")
+				fireworksAsset.setAnimationEnd(length, () => {
+					fireworksAsset.setAnimation(false)
 				})
-				var winW = this.winW / this.ratio
-				var winH = this.winH / this.ratio
-				for(var f = 0; f < 5; f++){
-					this.cgSpawn({
-						kind: "fireworks",
-						x: winW / 4 * f - 230 * mul / 2 * (f / 2),
-						y: winH - 460 * mul,
-						mul: mul,
-						scale: 165 / 230,
-						start: now
-					})
-				}
-			}else{
-				this.assets.fireworks.forEach(fireworksAsset => {
-					fireworksAsset.setAnimation("normal")
-					fireworksAsset.setAnimationStart(startMS)
-					var length = fireworksAsset.getAnimationLength("normal")
-					fireworksAsset.setAnimationEnd(length, () => {
-						fireworksAsset.setAnimation(false)
-					})
-				})
-				this.assets.fire.setAnimation("normal")
-			}
+			})
+			this.assets.fire.setAnimation("normal")
 			var don = this.assets.don
 			don.setAnimation("gogostart")
 			var length = don.getAnimationLength("gogo")
@@ -2543,8 +2452,6 @@
 			don.setAnimationStart(start)
 			var length = don.getAnimationLength("gogostart")
 			don.setAnimationEnd(length, don.normalAnimation)
-		}else{
-			this.cgStopGogo()
 		}
 	}
 	drawGogoTime(){
@@ -2599,27 +2506,13 @@
 			this.currentScore.adlib = adlib
 
 			if(score > 0){
-				if(!window.__skipCG){
-					// Worker 特效：爆炸
-					var mul = this.slotPos.size / 106
-					this.cgSpawn({
-						kind: "explosion",
-						x: this.slotPos.x,
-						y: this.slotPos.y,
-						mul: mul,
-						type: (bigNote ? 0 : 2) + (score === 450 ? 0 : 1),
-						start: performance.now()
-					})
-				}else{
-					// __skipCG：canvas 版（对照实验）
-					var explosion = this.assets.explosion
-					explosion.type = (bigNote ? 0 : 2) + (score === 450 ? 0 : 1)
-					explosion.setAnimation("normal")
-					explosion.setAnimationStart(this.getMS())
-					explosion.setAnimationEnd(bigNote ? 14 : 7, () => {
-						explosion.setAnimation(false)
-					})
-				}
+				var explosion = this.assets.explosion
+				explosion.type = (bigNote ? 0 : 2) + (score === 450 ? 0 : 1)
+				explosion.setAnimation("normal")
+				explosion.setAnimationStart(this.getMS())
+				explosion.setAnimationEnd(bigNote ? 14 : 7, () => {
+					explosion.setAnimation(false)
+				})
 			}
 			this.setDarkBg(score === 0)
 		}else{
