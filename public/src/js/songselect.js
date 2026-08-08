@@ -417,7 +417,7 @@ class SongSelect{
 				this.touchSearchBtn.style.display = "inline-block"
 				const openSearch = (e) => {
 					e.preventDefault() // 防止穿透点击
-					this.search.display() // 等效于 Ctrl + F，呼出搜索菜单
+					this.displaySearch(true) // 等效于 Ctrl + F，呼出搜索菜单
 				}
 				pageEvents.add(this.touchSearchBtn, "touchend", openSearch)
 			}
