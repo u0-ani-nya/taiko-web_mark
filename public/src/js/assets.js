@@ -149,6 +149,7 @@ var assets = {
 		".settings-outer": "bg_settings.png",
 		"#touch-pause-btn": "touch_pause.png",
 		"#touch-full-btn": "touch_fullscreen.png",
+		"#touch-search-btn": "search.png",
 		"#gamepad-bg, #gamepad-buttons": "settings_gamepad.png",
 		".song-search-result-crown": "crown.png",
 		".song-search-tip-error": "miss.png",

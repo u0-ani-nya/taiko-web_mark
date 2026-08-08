@@ -411,6 +411,17 @@ class SongSelect{
 			this.touchFullBtn.style.display = "block"
 			pageEvents.add(this.touchFullBtn, "touchend", toggleFullscreen)
 		}
+		if(touchEnabled){
+			this.touchSearchBtn = document.getElementById("touch-search-btn")
+			if(this.touchSearchBtn){
+				this.touchSearchBtn.style.display = "inline-block"
+				const openSearch = (e) => {
+					e.preventDefault() // 防止穿透点击
+					this.search.display() // 等效于 Ctrl + F，呼出搜索菜单
+				}
+				pageEvents.add(this.touchSearchBtn, "touchend", openSearch)
+			}
+		}
 		
 		pageEvents.add(this.canvas, "wheel", this.mouseWheel.bind(this))
 
