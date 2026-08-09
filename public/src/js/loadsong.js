@@ -255,13 +255,7 @@ class LoadSong{
 					img2.id = prefix + filename
 					img2.src = url
 				}
-				if("toBlob" in canvas){
-					canvas.toBlob(blob => {
-						saveScaled(URL.createObjectURL(blob))
-					})
-				}else{
-					saveScaled(canvas.toDataURL())
-				}
+				saveScaled(canvas.toDataURL())
 			}else{
 				assets.image[prefix + filename] = img
 				resolve()
