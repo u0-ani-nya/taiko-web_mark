@@ -249,8 +249,10 @@ class LoadSong{
 					let img2 = document.createElement("img")
 					pageEvents.load(img2).then(() => {
 						assets.image[prefix + filename] = img2
+						loader.assetsDiv.appendChild(img2)
 						resolve()
 					}, reject)
+					img2.id = prefix + filename
 					img2.src = url
 				}
 				if("toBlob" in canvas){
