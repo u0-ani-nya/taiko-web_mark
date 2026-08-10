@@ -140,11 +140,11 @@ class SongSelect{
 			}
 		})
 		if(assets.songs.length){
-			// this.songs.push({
-			// 	title: strings.back,
-			// 	skin: this.songSkin.back,
-			// 	action: "back"
-			// })
+			this.songs.push({
+				title: strings.back,
+				skin: this.songSkin.back,
+				action: "back"
+			})
 			this.songs.push({
 				title: strings.randomSong,
 				skin: this.songSkin.random,
@@ -165,18 +165,15 @@ class SongSelect{
 			// 	category: strings.songSuggest
 			// })
 		}
-		if(touchEnabled){
-			if(fromTutorial === "tutorial"){
-				fromTutorial = false
-			}
-		}else{
-			this.songs.push({
-				title: strings.howToPlay,
-				skin: this.songSkin.tutorial,
-				action: "tutorial",
-				category: strings.howToPlay
-			})
+		if(touchEnabled && fromTutorial === "tutorial"){
+			fromTutorial = false
 		}
+		this.songs.push({
+			title: strings.howToPlay,
+			skin: this.songSkin.tutorial,
+			action: "tutorial",
+			category: strings.howToPlay
+		})
 		this.showWarning = showWarning
 		if(showWarning && showWarning.name === "scoreSaveFailed"){
 			scoreStorage.scoreSaveFailed = true
