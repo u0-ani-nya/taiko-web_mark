@@ -1426,8 +1426,14 @@ class SongSelect{
 				this.showWarning = false
 			}
 		}else if(this.state.screen === "song"){
-			if(20 < mouse.y && mouse.y < 90 && 410 < mouse.x && mouse.x < 880 && (mouse.x < 540 || mouse.x > 750)){
-				this.moveToSong(mouse.x < 640 ? -7.1 : 7.1)
+			if(20 < mouse.y && mouse.y < 90 && 365 < mouse.x && mouse.x < 915 && (mouse.x < 540 || mouse.x > 750)){
+				if(mouse.x < 425){
+					this.categoryJump(-1)
+				}else if(mouse.x > 855){
+					this.categoryJump(1)
+				}else{
+					this.moveToSong(mouse.x < 640 ? -7.1 : 7.1)
+				}
 			}else if(!p2.session && 60 < mouse.x && mouse.x < 332 && 640 < mouse.y && mouse.y < 706 && gameConfig.accounts){
 				this.toAccount()
 			}else if(p2.session && 438 < mouse.x && mouse.x < 834 && mouse.y > 603){
@@ -1499,8 +1505,14 @@ class SongSelect{
 				moveTo = "showWarning"
 			}
 		}else if(this.state.screen === "song" && !this.search){
-			if(20 < mouse.y && mouse.y < 90 && 410 < mouse.x && mouse.x < 880 && (mouse.x < 540 || mouse.x > 750)){
-				moveTo = mouse.x < 640 ? "categoryPrev" : "categoryNext"
+			if(20 < mouse.y && mouse.y < 90 && 365 < mouse.x && mouse.x < 915 && (mouse.x < 540 || mouse.x > 750)){
+				if(mouse.x < 425){
+					moveTo = "catJumpPrev"
+				}else if(mouse.x > 855){
+					moveTo = "catJumpNext"
+				}else{
+					moveTo = mouse.x < 640 ? "categoryPrev" : "categoryNext"
+				}
 			}else if(!p2.session && 60 < mouse.x && mouse.x < 332 && 640 < mouse.y && mouse.y < 706 && gameConfig.accounts){
 				moveTo = "account"
 			}else if(p2.session && 438 < mouse.x && mouse.x < 834 && mouse.y > 603){
@@ -2199,6 +2211,22 @@ class SongSelect{
 				right: true,
 				fill: selectedSong.skin.background,
 				highlight: this.state.moveHover === "categoryNext"
+			})
+			// 分类跳转按钮 |◀ 和 ▶|
+			this.draw.categoryJumpBtn({
+				ctx: ctx,
+				x: winW / 2 - 280 / 2 - 100,
+				y: frameTop + 60,
+				fill: selectedSong.skin.background,
+				highlight: this.state.moveHover === "catJumpPrev"
+			})
+			this.draw.categoryJumpBtn({
+				ctx: ctx,
+				x: winW / 2 + 280 / 2 + 100,
+				y: frameTop + 60,
+				right: true,
+				fill: selectedSong.skin.background,
+				highlight: this.state.moveHover === "catJumpNext"
 			})
 			this.categoryCache.get({
 				ctx: ctx,
