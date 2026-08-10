@@ -1722,7 +1722,6 @@ class SongSelect{
 				}
 				pageEvents.send("song-select-difficulty", currentSong)
 			}else if(currentSong.action === "back"){
-				this.clean()
 				this.toTitleScreen()
 			}else if(currentSong.action === "random"){
 				this.playSound("se_don", 0, fromP2 ? fromP2.player : false)
