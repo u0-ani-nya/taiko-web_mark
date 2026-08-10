@@ -1661,40 +1661,58 @@ class CanvasDraw{
 		var ctx = config.ctx
 		ctx.save()
 		ctx.translate(config.x, config.y)
-		if(config.right){
-			ctx.scale(-1, 1)
+		var right = config.right
+		// 左侧 ◀|：三角在左竖线在右  右侧 |▶：竖线在左三角在右
+		// 画三角形（黑描边 + 填充）
+		var triW = 16, triH = 14, barH = 16, gap = 0
+		var triLeft = right ? -barH - gap : 0
+		var triRight = triLeft + triW
+		var triCx = right ? triRight : triLeft
+		// 黑底三角
+		ctx.beginPath()
+		if(right){
+			ctx.moveTo(triLeft, -triH)
+			ctx.lineTo(triRight, 0)
+			ctx.lineTo(triLeft, triH)
+		}else{
+			ctx.moveTo(triRight, -triH)
+			ctx.lineTo(triLeft, 0)
+			ctx.lineTo(triRight, triH)
 		}
-		// 画竖线 |
-		ctx.lineWidth = 5
-		ctx.strokeStyle = "#000"
-		ctx.beginPath()
-		ctx.moveTo(-18, -14)
-		ctx.lineTo(-18, 14)
-		ctx.stroke()
-		// 画三角形 ◀
-		ctx.beginPath()
-		ctx.moveTo(-10, -12)
-		ctx.lineTo(6, 0)
-		ctx.lineTo(-10, 12)
 		ctx.closePath()
 		ctx.fillStyle = "#000"
 		ctx.fill()
-		// 填充色（略小，形成描边效果）
+		// 填充三角（略小）
+		var s = 2
 		ctx.beginPath()
-		ctx.moveTo(-9, -10)
-		ctx.lineTo(4, 0)
-		ctx.lineTo(-9, 10)
+		if(right){
+			ctx.moveTo(triLeft + s, -triH + s)
+			ctx.lineTo(triRight - 1, 0)
+			ctx.lineTo(triLeft + s, triH - s)
+		}else{
+			ctx.moveTo(triRight - s, -triH + s)
+			ctx.lineTo(triLeft + 1, 0)
+			ctx.lineTo(triRight - s, triH - s)
+		}
 		ctx.closePath()
 		ctx.fillStyle = config.fill
 		ctx.fill()
+		// 竖线（紧贴三角）
+		ctx.lineWidth = 5
+		ctx.strokeStyle = "#000"
+		ctx.beginPath()
+		var barX = right ? -barH : triW
+		ctx.moveTo(barX, -barH)
+		ctx.lineTo(barX, barH)
+		ctx.stroke()
 		// 高光
 		if(config.highlight){
 			this.highlight({
 				ctx: ctx,
-				x: -6,
+				x: right ? -14 : 2,
 				y: 0,
-				w: 20,
-				h: 28,
+				w: 26,
+				h: 32,
 				opacity: 0.8,
 				radius: 8
 			})
