@@ -218,6 +218,12 @@
 		var winW = innerWidth
 		var winH = lastHeight
 
+		// 桌面模式下 innerWidth 可能远大于物理屏幕，用物理尺寸限制 canvas
+		var maxW = screen.width * (window.devicePixelRatio || 1)
+		var maxH = screen.height * (window.devicePixelRatio || 1)
+		if(winW > maxW) winW = maxW
+		if(winH > maxH) winH = maxH
+
 		if(winW / 32 > winH / 9){
 			winW = winH / 9 * 32
 		}
