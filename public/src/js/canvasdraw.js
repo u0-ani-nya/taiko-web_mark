@@ -1663,52 +1663,39 @@ class CanvasDraw{
 		ctx.translate(config.x, config.y)
 		var right = config.right
 		// 左侧 |◀：竖线在左三角在右  右侧 ▶|：三角在左竖线在右
-		var triW = 16, triH = 14, barH = 16
-		// 竖线
-		ctx.lineWidth = 5
-		ctx.strokeStyle = config.fill
-		ctx.beginPath()
-		var barX = right ? triW : -triW
-		ctx.moveTo(barX, -barH)
-		ctx.lineTo(barX, barH)
-		ctx.stroke()
-		// 黑底三角
-		ctx.beginPath()
+		var triW = 16, triH = 14, barH = 16, barW = 3
+		// 三角形路径
+		var triPath = new Path2D()
 		if(right){
-			ctx.moveTo(0, -triH)
-			ctx.lineTo(triW, 0)
-			ctx.lineTo(0, triH)
+			triPath.moveTo(0, -triH)
+			triPath.lineTo(triW, 0)
+			triPath.lineTo(0, triH)
 		}else{
-			ctx.moveTo(0, -triH)
-			ctx.lineTo(-triW, 0)
-			ctx.lineTo(0, triH)
+			triPath.moveTo(0, -triH)
+			triPath.lineTo(-triW, 0)
+			triPath.lineTo(0, triH)
 		}
-		ctx.closePath()
-		ctx.fillStyle = "#000"
-		ctx.fill()
-		// 填充三角（略小）
-		var s = 2
-		ctx.beginPath()
-		if(right){
-			ctx.moveTo(1, -triH + s)
-			ctx.lineTo(triW - 1, 0)
-			ctx.lineTo(1, triH - s)
-		}else{
-			ctx.moveTo(-1, -triH + s)
-			ctx.lineTo(-triW + 1, 0)
-			ctx.lineTo(-1, triH - s)
-		}
-		ctx.closePath()
+		triPath.closePath()
+		// 竖杠路径
+		var barPath = new Path2D()
+		var bx = right ? triW + 2 : -triW - 2
+		barPath.rect(bx - barW / 2, -barH, barW, barH * 2)
+		// 先描边再填充（与 draw.category 风格一致：lineWidth=6, #000）
+		ctx.lineWidth = 6
+		ctx.strokeStyle = "#000"
+		ctx.stroke(triPath)
+		ctx.stroke(barPath)
 		ctx.fillStyle = config.fill
-		ctx.fill()
+		ctx.fill(triPath)
+		ctx.fill(barPath)
 		// 高光
 		if(config.highlight){
 			this.highlight({
 				ctx: ctx,
-				x: right ? 0 : -triW,
+				x: right ? -5 : -triW - barW - 2,
 				y: 0,
-				w: triW + 5,
-				h: triH * 2,
+				w: triW + barW + 10,
+				h: triH * 2 + 6,
 				opacity: 0.8,
 				radius: 8
 			})
